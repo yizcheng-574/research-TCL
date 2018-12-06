@@ -40,7 +40,7 @@ for ev=1:EV
 end
 EVdata_alpha=unifrnd(0,1,1,EV);
 EVdata_beta=unifrnd(0.5,3,1,EV);
-load('./data/bus');
+load('../data/bus');
 EVdata_busnum=round(EVdata_busnum/500*EV);
 allBus=sum(EVdata_busnum);
 if allBus>EV
@@ -109,4 +109,4 @@ for day=1:DAY
 end
 
 PN=3.7;
-save('EVdata','PN','EV','EV_last_d','EV_mile','EV_mile_pred','EV_ta','EV_td','EVdata_alpha','EVdata_beta','EVdata_bus','EVdata_capacity','EVdata_mile','EVdata_price_week','EVdata_price_weekend','EVdata_week','EVdata_weekend');
+save('../data/EVdata.mat','PN','EV','EV_last_d','EV_mile','EV_mile_pred','EV_ta','EV_td','EVdata_alpha','EVdata_beta','EVdata_bus','EVdata_capacity','EVdata_mile','EVdata_price_week','EVdata_price_weekend','EVdata_week','EVdata_weekend');

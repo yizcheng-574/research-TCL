@@ -2,7 +2,7 @@ function [pavg,sigma ] = price_pred( ST,END,T,type )
 
 %计算给定时间段ST和END内实时电价平均值和方差
 if exist('gridPriceRecord') == 0
-    load('./data/gridPriceRecord');
+    load('../data/gridPriceRecord');
 end
 l_price=length(gridPriceRecord);
 st=ceil(ST/T);

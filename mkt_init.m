@@ -10,8 +10,8 @@ I1 = DAY*I;%仿真时长
 % windPower=windpower(1,I+1:end-I)*WIND;
 % loadPower=loadpower(1,I+1:end-I)*LOAD;
 
-load('./data/load_2017');loadPower=Load/max(max(Load))*LOAD;
-load('./data/wind_2017');windPower=Wind/max(max(Wind))*WIND;
+load('../data/load_2017');loadPower=Load/max(max(Load))*LOAD;
+load('../data/wind_2017');windPower=Wind/max(max(Wind))*WIND;
 clear Load Wind;
 %主电网分时电价
 % price_table=[0.335,1.253,0.781];%谷，峰，平
@@ -63,7 +63,7 @@ clear Load Wind;
 % end
 % 
 
-load('./data/RTP_pjm.mat');
+load('../data/RTP_pjm.mat');
 MAX_price=100;
 MIN_price=0;
 tmp=365;%31

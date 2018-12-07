@@ -5,18 +5,12 @@ RGB1=[colorScheme('FF933a');colorScheme('ffbd3a');colorScheme('ff3a3a');colorSch
 if type==8  %图11   
     st=25.5;en=st;ev=10;
     x1=(st-1)*24:T:(en)*24-T;
-    p1=priceRecord2((st-1)*I+1:(en)*I);
-    y1=powerRecord2(ev,(st-1)*I+1:(en)*I);
-    y2=avgPowerRecord2(ev,(st-1)*I+1:(en)*I);
-    y3=minPowerRecord2(ev,(st-1)*I+1:(en)*I);
-    y4=maxPowerRecord2(ev,(st-1)*I+1:(en)*I);    
-    p2=priceRecord1((st-1)*I+1:(en)*I);
-    y5=powerRecord1(ev,(st-1)*I+1:(en)*I);
-    y6=avgPowerRecord1(ev,(st-1)*I+1:(en)*I);   
-    y7=minPowerRecord1(ev,(st-1)*I+1:(en)*I);
-    y8=maxPowerRecord1(ev,(st-1)*I+1:(en)*I);
+    p1=priceRecord((st-1)*I+1:(en)*I);
+    y1=powerRecord(ev,(st-1)*I+1:(en)*I);
+    y2=avgPowerRecord(ev,(st-1)*I+1:(en)*I);
+    y3=minPowerRecord(ev,(st-1)*I+1:(en)*I);
+    y4=maxPowerRecord(ev,(st-1)*I+1:(en)*I);
     p3=grid_priceRecord((st-1)*I+1:(en)*I);
-    p4=preRecord11((st-1)*I+1:(en)*I).*p3;
     
     set(gcf,'unit','normalized','position',[0,0,0.2,0.15]);
     [AX,H1,H2]=plotyy([x1',x1'],[p1',p3'],[x1',x1',x1',x1'],[y1',y2',y3',y4']);hold on;
@@ -37,42 +31,19 @@ if type==8  %图11
     legend([H1(1),H1(2),H2(1),H2(2)],'方案1出清价格','主网价格','出清功率','最优功率')
     
     figure;set(gcf,'unit','normalized','position',[0,0,0.2,0.15]);
-    [AX,H1,H2]=plotyy([x1',x1',x1'],[p2',p3',p4'],[x1',x1',x1',x1'],[y5',y6',y7',y8']);hold on;
-    set(H2(1),'color','r','LineWidth',1.5);
-    set(H2(2),'color','k','LineWidth',1.5);
-    set(H2(3),'color','g','linestyle','--','LineWidth',1);
-    set(H2(4),'color','g','linestyle','--','LineWidth',1);
-    set(H1(2),'color','b','LineWidth',1.5);
-    set(H1(1),'color',RGB(3,:),'LineWidth',1.5);
-    set(H1(3),'color','b','LineWidth',1.5,'linestyle',':');
-
-    % 设置坐标轴的范围和刻度
-    set(AX,'Xlim',[(st-1)*24 en*24-T])
-    set(AX(1),'Ylim',[min(p4),max(p4)])
-
-    %设置坐标轴
-    % set(get(AX(2),'Ylabel'),'string',{'P';'Pavg';'Pmin';'Pmax'});
-    set(get(AX(2),'Ylabel'),'string','功率/kW');
-    set(get(AX(1),'Ylabel'),'string','价格');
-    legend([H1(1),H1(2),H1(3),H2(1),H2(2)],'方案1出清价格','主网价格','预测电价','出清功率','最优功率')
-
-    figure;set(gcf,'unit','normalized','position',[0,0,0.2,0.15]);
     H(i)=fill([x1,fliplr(x1)],[p3,fliplr(p1)],RGB(3,:));
     set(H(i),{'LineStyle'},{'none'});
     set(gca,'Xlim',[(st-1)*24 en*24-T])
     set(gca,'Ylim',[min(p1),max(p1)])
-      figure;set(gcf,'unit','normalized','position',[0,0,0.2,0.15]);
-
+    figure;set(gcf,'unit','normalized','position',[0,0,0.2,0.15]);
     H(i)=fill([x1,fliplr(x1)],[p2,fliplr(p3)],RGB(3,:));
     set(H(i),{'LineStyle'},{'none'});
     set(gca,'Xlim',[(st-1)*24 en*24-T])
     set(gca,'Ylim',[min(p4),max(p4)])
     z0=0.*x1;
-    z1=abs(tielineRecord_noEV((st-1)*I+1:(en)*I));
-    z2=abs(tielineRecord1((st-1)*I+1:(en)*I));
-    z3=abs(tielineRecord2((st-1)*I+1:(en)*I));
+    z=abs(tielineRecord((st-1)*I+1:(en)*I));
     figure;set(gcf,'unit','normalized','position',[0,0,0.2,0.15]);
-    plot(x1,[z2;z3]);
+    plot(x1,Z);
     set(gca,'Xlim',[(st-1)*24 en*24-T])
     set(gca,'Ylim',[800,max(z3)])
     

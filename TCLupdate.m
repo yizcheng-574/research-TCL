@@ -4,7 +4,7 @@ global TCLdata_state TCLdata_lockTime TCLdata_Ta TCLdata_P
 for tcl = 1: TCL
     state_flag = TCLdata_state(1, tcl);
     lockTime = TCLdata_lockTime(1, tcl);
-    Ta = TCLdata_Ta(tcl, time/dt + 1);
+    Ta = TCLdata_Ta(tcl, mod(time / dt, I1) + 1);
     Pa = TCLdata_PN(1, tcl);
     P = TCLpowerRecord(tcl, t_index);
     R = TCLdata_R(1, tcl);
@@ -60,8 +60,8 @@ for tcl = 1: TCL
             state = 0;
         end
         Ta = T0 - 2.7 * Pa * state * R - (T0 - 2.7 * Pa * state * R - Ta) * exp(-dt / R / C);
-        TCLdata_Ta(tcl, time /dt + sub_i + 1) = Ta;
-        TCLdata_P(tcl, time /dt + sub_i) = state * Pa;
+        TCLdata_Ta(tcl, mod(time / dt + sub_i, I1) + 1) = Ta;
+        TCLdata_P(tcl, time / dt + sub_i) = state * Pa;
     end
     TCLdata_state(1, tcl) = state_flag;
     TCLdata_lockTime(1, tcl) = lockTime;

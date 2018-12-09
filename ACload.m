@@ -1,6 +1,6 @@
 function [Pmax, Pmin, Pset] = ACload(Tmax, Tmin, Ta, R, C, T0, Pa)
 %自变量参数分别对应最大温度，最小温度，当前室内温度，空调等效阻抗，等效电容，室外温度，额定功率
-e = exp(-1 / R / C);
+e = exp(-0.25 / R / C);
 a = (Tmax - Tmin) / R / (1 - e );
 b = - (Tmax -Tmin) / R * e / (1 - e);
 c = -(T0 - Tmin - (T0 - Tmin) * e) / R / (1 - e);

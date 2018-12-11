@@ -20,7 +20,8 @@ indianred = [1 0.41 0.42];
 chocolate3 = [0.804 0.4 0.113];
 tan2 = [0.93  0.60 0.286];
 %----------------------
-%TCL跟踪曲线和实际响应曲线
+%主变功率，EV，TCL功率曲线，
+%电价曲线
 t1 = dt: dt : 24;
 t2 = T : T :24;
 subplot(2, 1 ,1);
@@ -43,20 +44,24 @@ yyaxis right
 if isFill == 0
     H2(1) = stairs(t2, gridPriceRecord4, 'color', dodgerblue, 'LineWidth', 2, 'LineStyle', '-.');
     H2(2) = stairs(t2, priceRecord, 'color', dodgerblue, 'LineWidth', 2, 'LineStyle', '-');
-    legend([H1(3), H1(1), H1(2), H3, H1(4), H2(1), H2(2)],'主变功率', 'EV', 'TCL', 'TCL实时功率', 'TCL平均功率', '主网电价', '本地电价', 'Orientation','horizontal')
+    legend([H1(3), H1(1), H1(2), H3, H1(4), H2(1), H2(2)],...
+        '主变功率', 'EV', 'TCL', 'TCL实时功率', 'TCL平均功率', '主网电价', '本地电价', 'Orientation','horizontal')
 else
     H2 = fill([t2, fliplr(t2)], [gridPriceRecord4, fliplr(priceRecord)], dodgerblue);
     set(H2, 'LineStyle', 'none');
-    legend([H1(3), H1(1), H1(2), H3, H1(4), H2],'主变功率', 'EV', 'TCL',  'TCL实时功率', 'TCL平均功率','电价', 'Orientation','horizontal')
+    legend([H1(3), H1(1), H1(2), H3, H1(4), H2],...
+        '主变功率', 'EV', 'TCL',  'TCL实时功率', 'TCL平均功率','电价', 'Orientation','horizontal')
 end
 ylabel('电价（元/kWh）');
 xlabel('时间');
 xlim([0, 24]);
 xticks(0 : 6 : 24);
 xticklabels({ '0:00', '6:00', '12:00', '18:00', '24:00'});
+
+%TCL跟踪曲线和实际响应曲线
 subplot(2, 1, 2);
 hold on;
-tcl = 1;
+tcl = 2;
 TCLpowerAvg = zeros(1, I);
 for i = 1 : I
     TCLpowerAvg(1, i) = mean(TCLdata_P(tcl, (i - 1) * T / dt + 1 : i * T / dt));
@@ -64,14 +69,16 @@ end
 yyaxis left
 H1 = stairs(t2, TCLpowerRecord(tcl, :), 'color', black, 'LineWidth', 2, 'DisplayName', '出清功率');
 H2 = stairs(t2, TCLpowerAvg, 'color', dodgerblue, 'LineWidth', 1, 'DisplayName', '平均功率', 'LineStyle', '-');
-ylabel('TCL功率((kW)')
+ylabel('TCL功率((kW)');
 ylim([0, TCLdata_PN(1, tcl)]);
 yyaxis right
 H3 = plot(t1, TCLdata_Ta(tcl,:), 'color', tomato, 'LineWidth', 1.5,'DisplayName', '室内温度');
-plot(t1, [ones(1, I1) * TCLdata_T(2,tcl); ones(1, I1) * TCLdata_T(1,tcl)], 'color', tomato, 'LineWidth' , 0.5, 'LineStyle', '-.', 'DisplayName', '室温上下限'); 
+plot(t1, [ones(1, I1) * TCLdata_T(2,tcl); ones(1, I1) * TCLdata_T(1,tcl)],...
+    'color', tomato, 'LineWidth' , 0.5, 'LineStyle', '-.', 'DisplayName', '室温上下限'); 
 ylabel('温度（摄氏度)');
 xlabel('时间');
 legend([H1, H2, H3], '出清功率', '平均功率', '室内温度', 'Orientation','horizontal');
 xlim([0, 24]);
 xticks(0 : 6 : 24);
-xticklabels({'0:00','6:00','12:00','18:00','24:00'});
+xticklabels({ '0:00', '6:00', '12:00', '18:00', '24:00'});
+

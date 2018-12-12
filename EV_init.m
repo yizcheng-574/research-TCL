@@ -1,4 +1,5 @@
 %生成初始的用车习惯
+global EV
 TA_avg = 19.82;
 TA_sigma = 1.92;
 TD_avg = 8.56;
@@ -37,6 +38,7 @@ elseif allBus < EV
     end
 end
 bus1 = 1;
+EVdata_bus = zeros(1, EV);
 for ev = 1 : EV
     while ev > sum(EVdata_busnum(1 : bus1))
         bus1 = bus1 + 1;

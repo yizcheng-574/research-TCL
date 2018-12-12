@@ -1,4 +1,4 @@
-function [ Pmax,Pmin,Pavg ] = BidPara( T,E,alpha,t,E_min,E_max,PN ) %t为剩余时间
+function [ Pmax,Pmin,Pavg ] = EVBidPara( T,E,alpha,t,E_min,E_max,PN ) %t为剩余时间
 E_avg=alpha*E_max+(1-alpha)*E_min;
 % E_avg=E_min;
 %该函数根据EV的E,用户设定的信息,包括alpha,E_min,E_max,t

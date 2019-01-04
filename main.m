@@ -1,8 +1,10 @@
 %单天优化
 clc; clear;
+% sen_index = sen_index + 1;
 global dt T T_tcl I1 I I2 EV TCL
-EV = 60;%EV总数，额定功率为3.7kW
-TCL = 100;%空调总数
+RATIO = 100;
+EV = 10 * RATIO;%EV总数，额定功率为3.7kW
+TCL = 10 * RATIO;%空调总数
 T = 15 / 60;%控制周期15min
 dt = 1 / 60 / 60;%空调控制周期2s
 I1 = 24 / dt;
@@ -11,38 +13,38 @@ T_tcl = 1; %空调控制指令周期60min
 I_tcl = T_tcl / T;
 T_mpc = 6;
 I2 = 24 / T_tcl;
-LOAD = 180;%LOAD最大负荷（kW）
-WIND = 200;%WIND风电装机容量（kW）
-tielineSold = 40;
-tielineBuy = 300;
+LOAD = 18 * RATIO;%LOAD最大负荷（kW）
+WIND = 20 * RATIO;%WIND风电装机容量（kW）
+tielineSold = 4 * RATIO;
+tielineBuy = 30 * RATIO;
 nod33 = 33;
 tolerance = 0.01;
-mkt_init;   %市场初始化
-price_init;
+mktInit;   %市场初始化
+priceInit;
 tielineRecord = zeros(1,I);%自联络线购电量
 gridPriceRecord4 = zeros(1,I);
 priceRecord = zeros(1,I);
 hasCongest = 0;
-offset = 0;
+offset = 12;
 isMpc = 1;
-EV_init;
+EVinit;
 EVpowerRecord = zeros(EV, I);
-EVavgPowerRecord = zeros(1, EV);
-EVmaxPowerRecord = zeros(1, EV);
-EVminPowerRecord = zeros(1, EV);
+EVavgPowerRecord = zeros(EV, I);
+EVmaxPowerRecord = zeros(EV, I);
+EVminPowerRecord = zeros(EV, I);
 EVdata_E = zeros(EV, I);
 EVdata_E(:, mod(offset / T , I) + 1) = unifrnd(0.1, 0.5, EV, 1) .* EVdata_capacity';
 EV_totalpowerRecord = zeros(1, I);%EV总充电功率
 
-TCL_init;
+TCLinit;
 TCLpowerRecord = zeros(TCL, I2);
-TCLsetPowerRecord = zeros(1, TCL);
-TCLmaxPowerRecord = zeros(1, TCL);
-TCLminPowerRecord = zeros(1, TCL);
+TCLsetPowerRecord = zeros(TCL, I2);
+TCLmaxPowerRecord = zeros(TCL, I2);
+TCLminPowerRecord = zeros(TCL, I2);
 TCLdata_Ta(:, mod(offset / dt , I1) + 1) =  unifrnd(25.8, 26.2, TCL, 1); 
 TCL_totalpowerRecord = zeros(1, I2);
 SOArecord = zeros(TCL, I2);
-
+EVdata_beta = 2 - 0.15 * TCLdata_beta(1: EV);
 % Tout = [Tout(721:1440); Tout(1:720)];
 % Tout = 32 * ones(1440, 1);
 for t_index = 1: I
@@ -84,10 +86,12 @@ for i = 1: I
             k1 = 1;
             if time >= EVdata(1, ev)
                 prePrice = [ gridPriceRecord4(t_index : I ) , gridPriceRecord4(1 : floor( EVdata(2,ev) / T)) ];
+                remain_t =  EVdata(2,ev) + 24 - time;
             else
                 prePrice = gridPriceRecord4(t_index : floor( EVdata(2,ev) / T));
+                remain_t =  EVdata(2,ev) - time;
             end
-            [Pmax, Pmin, ~] = EVBidPara(T, EVdata_E(ev, t_index), EVdata_alpha(ev),  EVdata(2,ev) + 24 - time, ...
+            [Pmax, Pmin, ~] = EVBidPara(T, EVdata_E(ev, t_index), EVdata_alpha(ev), remain_t, ...
                 EVdata_mile(ev), EVdata_capacity(ev), PN);
             %底层优化算法
             if hasCongest == 1
@@ -127,11 +131,11 @@ for i = 1: I
             end
             Pavg = max(Pmin,Pavg);
             Pavg = min(Pmax,Pavg);
-            EVmaxPowerRecord(1, ev) = Pmax;
-            EVavgPowerRecord(1, ev) = Pavg;
-            EVminPowerRecord(1, ev) = Pmin;
+            EVmaxPowerRecord(ev, t_index) = Pmax;
+            EVavgPowerRecord(ev, t_index) = Pavg;
+            EVminPowerRecord(ev, t_index) = Pmin;
             if hasCongest == 1
-                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pavg, 3, gridPrice, sigma);
+                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pavg, 2, gridPrice, sigma);
             else
                 bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pavg, EVdata_beta(ev), gridPrice, sigma);
             end
@@ -165,13 +169,13 @@ for i = 1: I
                     TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), TCLdata_beta(1, tcl));
             end
             SOArecord(tcl, t_index_tcl) = SOA;
-            TCLmaxPowerRecord(1, tcl) = Pmax;
-            TCLsetPowerRecord(1, tcl) = Pset;
-            TCLminPowerRecord(1, tcl) = Pmin;
+            TCLmaxPowerRecord(tcl, t_index_tcl) = Pmax;
+            TCLsetPowerRecord(tcl, t_index_tcl) = Pset;
+            TCLminPowerRecord(tcl, t_index_tcl) = Pmin;
             if hasCongest == 1
-                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, 3, gridPrice, sigma);
+                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, 2, gridPrice, sigma);
             else
-                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, TCLdata_beta(tcl), gridPrice, sigma);
+                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(tcl), gridPrice, sigma);
             end
         end
     end
@@ -183,10 +187,10 @@ for i = 1: I
     for ev = 1 : EV
         if time >= EVdata(1,ev) || time < EVdata(2, ev)
             if hasCongest == 1
-                bidCurve = EVbid(mkt, EVmaxPowerRecord(1, ev), EVminPowerRecord(1, ev), EVavgPowerRecord(1, ev),...
-                    3, gridPrice, sigma);
+                bidCurve = EVbid(mkt, EVmaxPowerRecord(ev, t_index), EVminPowerRecord(ev, t_index), EVavgPowerRecord(ev, t_index),...
+                    2, gridPrice, sigma);
             else
-                bidCurve = EVbid(mkt, EVmaxPowerRecord(1, ev), EVminPowerRecord(1, ev), EVavgPowerRecord(1, ev),...
+                bidCurve = EVbid(mkt, EVmaxPowerRecord(ev, t_index), EVminPowerRecord(ev, t_index), EVavgPowerRecord(ev, t_index),...
                     EVdata_beta(ev), gridPrice, sigma);
             end
             power_EV = handlePriceUpdate(bidCurve, clcPrice, mkt );
@@ -203,11 +207,11 @@ for i = 1: I
     if mod(t_index, I_tcl) == 1
         for tcl = 1 : TCL
             if hasCongest == 1
-                bidCurve = EVbid(mkt, TCLmaxPowerRecord(1, tcl), TCLminPowerRecord(1, tcl), TCLsetPowerRecord(1, tcl),...
-                    3, gridPrice, sigma);
+                bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl, t_index_tcl), TCLminPowerRecord(tcl, t_index_tcl), TCLsetPowerRecord(tcl, t_index_tcl),...
+                    2, gridPrice, sigma);
             else
-                bidCurve = EVbid(mkt, TCLmaxPowerRecord(1, tcl), TCLminPowerRecord(1, tcl), TCLsetPowerRecord(1, tcl),...
-                    TCLdata_beta(tcl), gridPrice, sigma);
+                bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl, t_index_tcl), TCLminPowerRecord(tcl, t_index_tcl), TCLsetPowerRecord(tcl, t_index_tcl),...
+                    EVdata_beta(tcl), gridPrice, sigma);
             end
             power_TCL = handlePriceUpdate(bidCurve, clcPrice, mkt );
             TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
@@ -219,7 +223,11 @@ for i = 1: I
     tmp = totalPowerEV + totalPowerTCL;
     tielineRecord(t_index) = tmp - wp + lp;%正表示自主网购电，负表示向主网售电
 end
-for tcl = 1 : TCL
-    TCLdata_Ta(tcl,:) = (TCLdata_Ta(tcl,:) - TCLdata_T(2, tcl)) / (TCLdata_T(1, tcl) - TCLdata_T(2, tcl));
-end
+% for tcl = 1 : TCL
+%     TCLdata_Ta(tcl,:) = (TCLdata_Ta(tcl,:) * (TCLdata_T(1, tcl) - TCLdata_T(2, tcl)) + TCLdata_T(2, tcl)) ;
+% end
+
+% for tcl = 1 : TCL
+%     TCLdata_Ta(tcl,:) = (TCLdata_Ta(tcl,:)- TCLdata_T(2, tcl)) /(TCLdata_T(1, tcl)- TCLdata_T(2, tcl)) ;
+% end
 tongji;

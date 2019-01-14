@@ -1,4 +1,4 @@
-function [ P_max, P_min, P_set, SOA_1 ] = TCLBidPara(priceRecord, T_0, T_out, T_max, T_min, R, C, PN, beta)
+function [ P_max, P_min, P_set, SOA_1 ] = TCLBidPara(priceRecord, T_0, T_out, T_max, T_min, R, C, PN)
 %底层TCL根据动态方程进行优化, priceArray电价序列, T_0 t-1时刻室内温度，T_out室外温度序列
 %T_min最低室温， T_max最高室温
 %Pset最优当前电价
@@ -11,21 +11,19 @@ a =  (T_max - T_min) / denominator;
 b = - e * a;
 c = - (T_out - T_min) / eta / R;
 N = length(priceRecord);
-% A B 0 ... 0 0
-% 0 A B ... 0 0
-%..............
-% 0 0 0 ... A B
-% 0 0 0 ... 0 A
-f1 = (diag(a * ones(1, N)) + diag(b * ones(1, N - 1), 1)) * priceRecord;
-f2 = beta * ones(N, 1);
-fun = @(x) - x' * (diag(a * ones(1, N), 0) + diag(b * ones(1, N - 1), 1)) * priceRecord +  2.5 / beta * sum((x).^2); %beta 1-10 10-热 1-冷
-
 P_min = -(a + b * SOA_0 + c(1));
 P_max = - (b * SOA_0 + c(1));
 P_min = min(PN, P_min);
 P_min = max(P_min, 0);
 P_max = min(PN, P_max);
 P_max =max(P_max, 0);
+% A B 0 ... 0 0
+% 0 A B ... 0 0
+%..............
+% 0 0 0 ... A B
+% 0 0 0 ... 0 A
+% fun = @(x) - x' * (diag(a * ones(1, N), 0) + diag(b * ones(1, N - 1), 1)) * priceRecord +  2.5 / beta * sum((x).^2); %beta 1-10 10-热 1-冷
+fun = @(x) - x' * (diag(a * ones(1, N), 0) + diag(b * ones(1, N - 1), 1)) * priceRecord + priceRecord' * (x - 0.5).^2 * a; %beta 1-10 10-热 1-冷
 % A2_main矩阵
 % A 0 0 ... 0 0
 % B A 0 ... 0 0

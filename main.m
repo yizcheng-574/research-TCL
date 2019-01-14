@@ -1,7 +1,7 @@
 %单天优化
 clc; clear;
 % sen_index = sen_index + 1;
-global dt T T_tcl I1 I I2 EV TCL
+global dt T T_tcl I1 I I2 EV TCL step RATIO
 RATIO = 100;
 EV = 10 * RATIO;%EV总数，额定功率为3.7kW
 TCL = 10 * RATIO;%空调总数
@@ -27,6 +27,7 @@ priceRecord = zeros(1,I);
 hasCongest = 0;
 offset = 12;
 isMpc = 1;
+isAging = 1;
 EVinit;
 EVpowerRecord = zeros(EV, I);
 EVavgPowerRecord = zeros(EV, I);
@@ -37,16 +38,23 @@ EVdata_E(:, mod(offset / T , I) + 1) = unifrnd(0.1, 0.5, EV, 1) .* EVdata_capaci
 EV_totalpowerRecord = zeros(1, I);%EV总充电功率
 
 TCLinit;
+TCLdata_Ta = zeros(TCL, 24 / dt);
+TCLdata_P = zeros(TCL, 24 / dt);
+TCLdata_lockTime = zeros(1, TCL);
+TCLdata_Ta_benchmark = zeros(TCL, 24 / dt);
+TCLdata_P_benchmark = zeros(TCL, 24 / dt);
 TCLpowerRecord = zeros(TCL, I2);
 TCLsetPowerRecord = zeros(TCL, I2);
 TCLmaxPowerRecord = zeros(TCL, I2);
 TCLminPowerRecord = zeros(TCL, I2);
 TCLdata_Ta(:, mod(offset / dt , I1) + 1) =  unifrnd(25.8, 26.2, TCL, 1); 
+TCLdata_Ta_benchmark = TCLdata_Ta;
 TCL_totalpowerRecord = zeros(1, I2);
 SOArecord = zeros(TCL, I2);
-EVdata_beta = 2 - 0.15 * TCLdata_beta(1: EV);
 % Tout = [Tout(721:1440); Tout(1:720)];
 % Tout = 32 * ones(1440, 1);
+TransformerInit;
+
 for t_index = 1: I
     gridPrice = gridPriceRecord(floor((t_index - 1) * T) + 1);
     gridPriceRecord4(t_index) = gridPrice;
@@ -56,19 +64,25 @@ for i = 1: I
     mod_t = mod(t_index, I) + 1;
     mod_t_1 = mod(t_index - 1, I) + 1; 
     time = (t_index - 1) * T ;
+    theta_a = mean(Tout( 1 + time * 60 : (time + 0.25) * 60));%C
     gridPrice = gridPriceRecord4(t_index);
     wp = windPowerRecord(t_index);
     lp = loadPowerRecord(t_index);
     totalPowerEV = 0;
     bidCurve = zeros(1, step + 1);
     %联络线投标
-    tielineCurve = zeros(1, step + 1);
     sigma = sigmaRecord(floor(time) + 1);
-    for q = 1 : step + 1
-        if pCurve(q) < gridPrice
-            tielineCurve(q) = tielineSold;
-        elseif pCurve(q) >= gridPrice
-            tielineCurve(q) = -tielineBuy;
+    if isAging == 1 %考虑变压器损耗
+        isBid = 1;
+        transformer_ageing;
+    else %不考虑变压器损耗
+        tielineCurve = zeros(1, step + 1); 
+        for q = 1 : step + 1
+            if pCurve(q) < gridPrice            
+                tielineCurve(q) = tielineSold;                                       
+            elseif pCurve(q) >= gridPrice
+                tielineCurve(q) = -tielineBuy;
+            end
         end
     end
     if t_index > 3
@@ -166,7 +180,7 @@ for i = 1: I
                     TCLdata_R(1, tcl), TCLdata_C(1, tcl), Tout(time * 60 + 1), TCLdata_PN(1, tcl));
             else %按底层mpc投标
                 [Pmax, Pmin, Pset, SOA] = TCLBidPara(TCLmpcPriceRecord, TCLdata_Ta(tcl, time / dt + 1), ToutRecord, ...
-                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), TCLdata_beta(1, tcl));
+                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl));
             end
             SOArecord(tcl, t_index_tcl) = SOA;
             TCLmaxPowerRecord(tcl, t_index_tcl) = Pmax;
@@ -217,17 +231,15 @@ for i = 1: I
             TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
             totalPowerTCL = totalPowerTCL + power_TCL;
         end
-        TCLupdate();
+        TCLupdate;
         TCL_totalpowerRecord(t_index_tcl) = totalPowerTCL;
+        TCLuncontrolled;
     end
     tmp = totalPowerEV + totalPowerTCL;
     tielineRecord(t_index) = tmp - wp + lp;%正表示自主网购电，负表示向主网售电
+    if isAging == 1
+        isBid = 0;
+        transformer_ageing;
+    end
 end
-% for tcl = 1 : TCL
-%     TCLdata_Ta(tcl,:) = (TCLdata_Ta(tcl,:) * (TCLdata_T(1, tcl) - TCLdata_T(2, tcl)) + TCLdata_T(2, tcl)) ;
-% end
-
-% for tcl = 1 : TCL
-%     TCLdata_Ta(tcl,:) = (TCLdata_Ta(tcl,:)- TCLdata_T(2, tcl)) /(TCLdata_T(1, tcl)- TCLdata_T(2, tcl)) ;
-% end
 tongji;

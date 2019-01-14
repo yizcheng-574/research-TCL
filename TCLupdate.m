@@ -1,6 +1,6 @@
 %P, Pa, Ta, T0, state_flag, time, R, C
 %自变量参数分别对应：目标功率 额定功率 室内温度  室外温度  空调状态  等效阻抗  等效电容
-global dt T_tcl
+global dt T_tcl I1
 for tcl = 1: TCL
     state_flag = TCLdata_state(1, tcl);
     lockTime = TCLdata_lockTime(1, tcl);

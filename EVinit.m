@@ -22,6 +22,8 @@ for ev = 1 : EV
     end
 end
 EVdata_alpha = unifrnd(0,1,1,EV);
+EVdata_beta = unifrnd(0,1,1,EV);
+
 load('../data/bus');
 EVdata_busnum = round(EVdata_busnum / 500 * EV);
 allBus = sum(EVdata_busnum);

@@ -38,7 +38,7 @@ t2 = 0 : T_tcl : 24;
 %----------------------
 %主变功率，EV，TCL功率曲线，
 %电价曲线
-TOTAL_PLOT = 3;
+TOTAL_PLOT = 2;
 subplot(TOTAL_PLOT, 1 ,1);
 isFill = 0;
 hold on;
@@ -79,7 +79,7 @@ yyaxis right
 H5 = plot(1 / 60 : 1 / 60 : 24 , offsetArray(Tout, 720), 'color', tomato, 'LineWidth', 1.5, 'LineStyle', '-', 'DisplayName', '室外温度');
 ylabel('温度(摄氏度)');
 le = legend([H1(2), H1(1), H4(1), Hev, Htcl, H5],...
-    '主变功率', 'EV出清功率', 'TCL出清功率', 'EV最优功率', 'TCL最优功率', '室外温度','Orientation','vertical'); set(le, 'Box', 'off')
+    '主变功率', 'EV出清功率', 'TCL出清功率', 'EV最优功率', 'TCL最优功率', '室外温度','Orientation','horizontal'); set(le, 'Box', 'off')
 xlim([0, 24]);
 xticks(0 : 6 : 24);
 % xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
@@ -98,7 +98,7 @@ H3 = plot(t1, offsetArray(sum(TCLdata_P/1000), I1 / 2));
 H4(3) = stairs(t2, appendStairArray(offsetArray(TCLpowerAvg_benchmark/1000, I2 / 2)));
 H4(2) = stairs(t2, appendStairArray(offsetArray(TCLpowerAvg/1000, I2 / 2)));
 H4(1) = stairs(t2, appendStairArray(offsetArray(TCL_totalpowerRecord/1000, I2 / 2)));
-set(H3, 'color', black, 'LineWidth', 0.5, 'LineStyle', ':', 'marker', 'none');
+set(H3, 'color', black, 'LineWidth', 0.5, 'LineStyle', '-', 'marker', 'none');
 set(H4(3), 'color', brown, 'LineWidth', 2, 'LineStyle', '-', 'marker', 'none');
 set(H4(2), 'color', dodgerblue - 0.1, 'LineWidth', 2, 'LineStyle', '-', 'marker', 'none');
 set(H4(1), 'color', black, 'LineWidth', 1, 'LineStyle', '-', 'marker', 'none');
@@ -108,7 +108,7 @@ xlim([0, 24]);
 xticks(0 : 6 : 24);
 xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
 % set(gca,'xticklabel','');
-le = legend([H4(1), H4(2), H3, H4(3)],'出清功率', '平均功率','实际功率', '不控功率', 'Orientation','vertical'); set(le, 'Box', 'off');
+le = legend([H4(1), H4(2), H3, H4(3)],'出清功率', '平均功率','实际功率', '不控功率', 'Orientation','horizontal'); set(le, 'Box', 'off');
 
 % subplot(TOTAL_PLOT, 1, 3); hold on;
 % H1 = plot(t1, offsetArray(TCLdata_Ta_benchmark, I1 / 2), 'color', gray , 'LineWidth' , 0.5);
@@ -117,6 +117,7 @@ le = legend([H4(1), H4(2), H3, H4(3)],'出清功率', '平均功率','实际功率', '不控功
 % xticks(0 : 6 : 24);
 % xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
 % le = legend([H1(1), H2(1)], '参与优化', '不参与优化', 'Orientation','vertical'); set(le, 'Box', 'off');
+
 if isAging == 0 %计算老化
     for i = 1 : I
         t_index = mod(i - 1 + offset / T , I) + 1;
@@ -159,6 +160,8 @@ for tcl = 1 : TCL
     TCLdata_cost(2, tcl) = TCLpowerRecord(tcl, :) * gridPriceRecord';
 
 end
+EVdata_cost(1,:) = gridPriceRecord4 * EVpowerRecord' ;
+EVdata_cost(2,:) = priceRecord * EVpowerRecord' ;
 
 figure; hold on;
 rgb = zeros( TCL, 3);

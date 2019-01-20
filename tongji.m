@@ -152,16 +152,16 @@ for tcl = 1 : TCL
     cost = 0;
     cost_benchmark = 0;
     for i = 1 : 24
-        cost = cost + mean(TCLdata_P(tcl, (i - 1) * T_tcl / dt + 1 : i * T_tcl / dt )) * gridPriceRecord(1, i);
-        cost_benchmark = cost_benchmark + mean(TCLdata_P_benchmark(tcl, (i - 1) * T_tcl / dt + 1 : i * T_tcl / dt )) * gridPriceRecord(1, i);
+        cost = cost + T * mean(TCLdata_P(tcl, (i - 1) * T_tcl / dt + 1 : i * T_tcl / dt )) * gridPriceRecord(1, i);
+        cost_benchmark = cost_benchmark + T * mean(TCLdata_P_benchmark(tcl, (i - 1) * T_tcl / dt + 1 : i * T_tcl / dt )) * gridPriceRecord(1, i);
     end
     TCLdata_cost(1, tcl) = cost;
     TCLdata_cost(3, tcl) = cost_benchmark;
-    TCLdata_cost(2, tcl) = TCLpowerRecord(tcl, :) * gridPriceRecord';
+    TCLdata_cost(2, tcl) = T * TCLpowerRecord(tcl, :) * gridPriceRecord';
 
 end
-EVdata_cost(1,:) = gridPriceRecord4 * EVpowerRecord' ;
-EVdata_cost(2,:) = priceRecord * EVpowerRecord' ;
+EVdata_cost(1,:) = gridPriceRecord4 * EVpowerRecord' * T;
+EVdata_cost(2,:) = priceRecord * EVpowerRecord'* T;
 
 figure; hold on;
 rgb = zeros( TCL, 3);
@@ -172,7 +172,7 @@ ylabel('出清成本(元)');
 legend('show');
 set(gcf,'unit','normalized','position',[0,0,0.2,0.2]);
 %计算配网成本
-DSO_cost(1) = tielineRecord * priceRecord';
+DSO_cost(1) = tielineRecord * (priceRecord - gridPriceRecord4)' * T;
 DSO_cost(2) = sum(DL_record) * install_cost / expectancy;
 
 %-------------function definition-------------------------------------

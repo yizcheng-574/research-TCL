@@ -1,5 +1,5 @@
 step = 500;%投标精度
-mkt_min = 0;
+mkt_min = 0.1;
 mkt_max = 1.2;
 mkt = [mkt_min,mkt_max,step];
 pCurve = (mkt_min:(mkt_max-mkt_min)/step:mkt_max);

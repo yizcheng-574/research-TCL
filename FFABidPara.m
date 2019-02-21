@@ -2,7 +2,7 @@ function [ P_max, P_min, P_set, SOA_1 ] = TCLBidPara(priceRecord, T_0, T_out, T_
 %底层TCL根据动态方程进行优化, priceArray电价序列, T_0 t-1时刻室内温度，T_out室外温度序列
 %T_min最低室温， T_max最高室温
 %Pset最优当前电价
-global T_tcl
+global T_tcl;
 eta = 2.7;
 e = exp( - T_tcl / R / C);
 denominator = eta * R * (1 - e);

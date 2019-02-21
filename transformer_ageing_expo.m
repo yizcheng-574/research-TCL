@@ -27,7 +27,7 @@ d_theta_h2 = d_theta_h2 + ((k21 - 1) * (K .^ y) * d_theta_hr - d_theta_h2) * (1 
 d_theta_h = d_theta_h1 - d_theta_h2;
 theta_h = theta_o + d_theta_h;
 % DL = exp((15000 / (110 + 273) - 15000 ./ (theta_h + 273))) * Tmin; % 110 for thermally updated paper
-DL = 2 .^ ((theta_h -90) / 6) * Tmin;%98 for non-thermally updated paper,
+DL = 2 .^ ((theta_h -98) / 6) * Tmin;%98 for non-thermally updated paper,
 if isBid == 1
     expectancy = 20 * 365 * 24 * 60;
     P_rated = tielineBuy;%kW

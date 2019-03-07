@@ -1,4 +1,4 @@
-global dt T I1 FFA IVA p1 p2 q1 q2
+global dt T I1 FFA IVA p1 p2 q1 q2 psiRecord
 for tcl = 1 : FFA + IVA
     Ta = TCLdata_Ta_benchmark(tcl, mod(time / dt, I1) + 1);
     state = TCLdata_state_benchmark(1, tcl);
@@ -34,6 +34,7 @@ for tcl = 1 : FFA + IVA
             Q = 2.7 * Pa * state;
             TCLdata_P_benchmark(tcl, time / dt + sub_i) = state * Pa;       
         end
+        Q = Q - psiRecord(tcl);
         Ta = T0 - Q * R - (T0 - Q * R - Ta) * exp(- dt / R / C);
         TCLdata_Ta_benchmark(tcl, mod(time / dt + sub_i, I1) + 1) = Ta;
     end

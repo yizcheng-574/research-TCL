@@ -1,6 +1,6 @@
 %P, Pa, Ta, T0, state_flag, time, R, C
 %自变量参数分别对应：目标功率 额定功率 室内温度  室外温度  空调状态  等效阻抗  等效电容
-global dt T_tcl I1 FFA
+global dt T_tcl I1 FFA psiRecord
 for tcl = 1: FFA
     state_flag = TCLdata_state(1, tcl);
     lockTime = TCLdata_lockTime(1, tcl);
@@ -59,10 +59,19 @@ for tcl = 1: FFA
         else
             state = 0;
         end
-        Ta = T0 - 2.7 * Pa * state * R - (T0 - 2.7 * Pa * state * R - Ta) * exp(- dt / R / C);
+        psi = psiRecord(1, tcl);
+        Ta = T0 - (2.7 * Pa * state - psi )* R - (T0 - (2.7 * Pa * state - psi) * R - Ta) * exp(- dt / R / C);
         TCLdata_Ta(tcl, mod(time / dt + sub_i, I1) + 1) = Ta;
         TCLdata_P(tcl, time / dt + sub_i) = state * Pa;
     end
+    e_v = exp(- T_tcl / R / C);
     TCLdata_state(1, tcl) = state_flag;
     TCLdata_lockTime(1, tcl) = lockTime;
+    if isOccupRandom == 1
+        psi =2.7 * P - (mean(Tout(mod(time * 60 + T_tcl + 1, 1440):time * 60 + T_tcl * 60)) - (Ta - e_v * TCLdata_Ta(tcl, mod(time / dt, I1) + 1)) / (1 - e_v)) / R;
+        if psi < 0
+            psi = 0;
+        end     
+        FFApsiPreRecord(1, tcl) = psi;
+    end
 end

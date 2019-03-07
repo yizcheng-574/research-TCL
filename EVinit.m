@@ -49,4 +49,6 @@ end
 tmp = EVdata_bus;
 EVdata_bus = tmp(randperm(numel(tmp)));
 PN=3.7;
+EVdata_initE = unifrnd(0.1, 0.5, EV, 1);
+
 clear TD_avg TA_avg TD_sigma TA_sigma bus1 busi allBus ev tmp 

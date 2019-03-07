@@ -11,3 +11,7 @@ theta_h_record(tmp) = theta_o + d_theta_h1 - d_theta_h2;
 d_theta_h1_record(tmp)= d_theta_h1;
 d_theta_h2_record(tmp)= d_theta_h2;
 theta_o_record(tmp) = theta_o;
+expectancy = 20 * 8640 * 60;
+P_rated = tielineBuy;%kW
+install_cost = P_rated * 100; %yuan
+dC_dL = install_cost / expectancy;

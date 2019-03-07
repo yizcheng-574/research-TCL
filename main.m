@@ -1,23 +1,24 @@
-%单天优化
+%考虑随机因素影响
 clc; clear;
 % sen_index = sen_index + 1;
-global dt T T_tcl I1 I I2 EV FFA IVA step RATIO p1 p2 q1 q2
+% load 'D:\CYZ\TCLdata\0228\initData'
+global dt T T_tcl I1 I I2 EV FFA IVA step RATIO p1 p2 q1 q2 psiRecord
 RATIO = 1;
 EV = 5 * RATIO;%EV总数，额定功率为3.7kW
-FFA = 4 * RATIO;%空调总数
-IVA = 6 * RATIO;
+FFA = 6 * RATIO;%空调总数
+IVA = 4 * RATIO;
 T = 15 / 60;%控制周期15min
 dt = 1 / 60 / 60;%空调控制周期2s
 I1 = 24 / dt;
 I = 24 / T;
 T_tcl = 1; %空调控制指令周期60min
 I_tcl = T_tcl / T;
-T_mpc = 6;
+T_mpc = 4;
 I2 = 24 / T_tcl;
 LOAD = 20 * RATIO;%LOAD最大负荷（kW）
 WIND = 20 * RATIO;%WIND风电装机容量（kW）
 tielineSold = 4 * RATIO;
-tielineBuy = 25 * RATIO;
+tielineBuy = 28 * RATIO;
 nod33 = 33;
 tolerance = 0.01;
 mktInit;   %市场初始化
@@ -33,9 +34,10 @@ hasCongest = 0;
 offset = 12;
 
 isMpc = 1;
-isAging = 1;
+isAging = 0;
 isEVflex = 1;
 isTCLflex = 1;
+isOccupRandom = 0;
 EV_totalpowerRecord = zeros(1, I);%EV总充电功率
 TCL_totalpowerRecord = zeros(1, I);
 IVA_totalpowerRecord = zeros(1, I);%EV总充电功率
@@ -45,17 +47,16 @@ EVavgPowerRecord = zeros(EV, I);
 EVmaxPowerRecord = zeros(EV, I);
 EVminPowerRecord = zeros(EV, I);
 EVdata_E = zeros(EV, I);
-EVdata_E(:, mod(offset / T , I) + 1) = unifrnd(0.1, 0.5, EV, 1) .* EVdata_capacity';
+EVdata_E(:, mod(offset / T , I) + 1) = EVdata_initE .* EVdata_capacity';
 totalPowerEV = 0;
 if isTCLflex == 1
-
-   
+    
     IVApowerRecord = zeros(IVA, I);
     IVAsetPowerRecord = zeros(IVA, I);
     IVAmaxPowerRecord = zeros(IVA, I);
     IVAminPowerRecord = zeros(IVA, I);
     IVAdata_Ta = zeros(IVA, I);
-    IVAdata_Ta(:, mod(offset / T , I) + 1) = unifrnd(25.8, 26.2, IVA, 1);
+    IVAdata_Ta(:, mod(offset / T , I) + 1) = TCLdata_initT(FFA + 1, end, 1);
 
     TCLdata_state = ceil(unifrnd(0, 4, 1, FFA));
     TCLdata_Ta = zeros(FFA, 24 / dt);
@@ -65,7 +66,7 @@ if isTCLflex == 1
     TCLsetPowerRecord = zeros(FFA, I2);
     TCLmaxPowerRecord = zeros(FFA, I2);
     TCLminPowerRecord = zeros(FFA, I2);
-    TCLdata_Ta(:, mod(offset / dt , I1) + 1) =  unifrnd(25.8, 26.2, FFA, 1); 
+    TCLdata_Ta(:, mod(offset / dt , I1) + 1) =  TCLdata_initT(1 : FFA, 1);
 
     FFASOArecord = zeros(FFA, I2);
     IVASOArecord = zeros(IVA, I);
@@ -76,10 +77,11 @@ TCLdata_Ta_benchmark = zeros(FFA + IVA, 24 / dt);
 if isTCLflex == 1
     TCLdata_Ta_benchmark(:, mod(offset / dt , I1) + 1) = [TCLdata_Ta(:, mod(offset / dt , I1) + 1) ; IVAdata_Ta(:, mod(offset / T , I) + 1)];
 else
-    TCLdata_Ta_benchmark(:, mod(offset / dt , I1) + 1) = unifrnd(25.8, 26.2, FFA + IVA, 1); 
+    TCLdata_Ta_benchmark(:, mod(offset / dt , I1) + 1) = unifrnd(25.8, 26.2, FFA + IVA, 1);
 end
-TransformerInit;
-
+if isAging == 1
+    TransformerInit;
+end
 for t_index = 1: I
     gridPrice = gridPriceRecord(floor((t_index - 1) * T) + 1);
     gridPriceRecord4(t_index) = gridPrice;
@@ -89,7 +91,9 @@ loadRecord = zeros(1, I);
 sigma_wind = 0;
 sigma_load = 0;
 
-
+IVApsiPreRecord = zeros(1, IVA);
+FFApsiPreRecord = zeros(1, FFA);
+psiRecord =  zeros(1, IVA + FFA);
 for i = 1: I
     t_index = mod(i - 1 + offset / T , I) + 1;
     t_index_tcl = floor(t_index / I_tcl) + 1;
@@ -196,6 +200,10 @@ for i = 1: I
             end
         end   
     end
+    if isOccupRandom == 1
+        psiRecord(1, FFA + 1: end) = normrnd(0, 1.5, 1, IVA); %当前周期实际扰动误差
+        psiRecord(psiRecord < 0) = 0;  
+    end
     if isTCLflex == 1
         totalPowerIVA = 0;
         for iva = 1 : IVA
@@ -217,7 +225,7 @@ for i = 1: I
             end
             %按跟踪目标温度投标
             [Pmax, Pmin, Pset, SOA] = IVABidPara(IVAmpcPriceRecord, IVAdata_Ta(iva, t_index), ToutRecord, ...
-                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), IVAdata_Pmin(1, iva));
+                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), IVAdata_Pmin(1, iva), IVApsiPreRecord(1, iva));
             IVASOArecord(iva, t_index) = SOA;
             IVAmaxPowerRecord(iva, t_index) = Pmax;
             IVAsetPowerRecord(iva, t_index) = Pset;
@@ -225,10 +233,14 @@ for i = 1: I
             if hasCongest == 1
                 bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, 2, gridPrice, sigma);
             else
-                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl, EV) + 1), gridPrice, sigma);
+                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
             end
         end
         if mod(t_index, I_tcl) == 1
+            if isOccupRandom == 1
+                psiRecord(1, 1 : FFA) = normrnd(0, 1.5, 1, FFA); %当前周期实际扰动误差
+                psiRecord(psiRecord < 0) = 0;
+            end
             N = T_mpc / T_tcl;
             totalPowerFFA = 0;
             TCLmpcPriceRecord = zeros(N, 1);
@@ -252,7 +264,7 @@ for i = 1: I
                         TCLdata_R(1, tcl), TCLdata_C(1, tcl), Tout(time * 60 + 1), TCLdata_PN(1, tcl));
                 else %按底层mpc投标
                     [Pmax, Pmin, Pset, SOA] = FFABidPara(TCLmpcPriceRecord, TCLdata_Ta(tcl, time / dt + 1), ToutRecord, ...
-                        TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl));
+                        TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), FFApsiPreRecord(1, tcl));
                 end
                 FFASOArecord(tcl, t_index_tcl) = SOA;
                 TCLmaxPowerRecord(tcl, t_index_tcl) = Pmax;
@@ -261,7 +273,7 @@ for i = 1: I
                 if hasCongest == 1
                     bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, 2, gridPrice, sigma);
                 else
-                    bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(tcl), gridPrice, sigma);
+                    bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset,EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
                 end
             end
         end
@@ -306,7 +318,7 @@ for i = 1: I
                         2, gridPrice, sigma);
                 else
                     bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl, t_index_tcl), TCLminPowerRecord(tcl, t_index_tcl), TCLsetPowerRecord(tcl, t_index_tcl),...
-                        EVdata_beta(tcl), gridPrice, sigma);
+                       EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
                 end
                 power_TCL = handlePriceUpdate(bidCurve, clcPrice, mkt );
                 TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
@@ -326,12 +338,12 @@ for i = 1: I
                     2, gridPrice, sigma);
             else
                 bidCurve = EVbid(mkt, IVAmaxPowerRecord(iva, t_index), IVAminPowerRecord(iva, t_index), IVAsetPowerRecord(iva, t_index),...
-                    EVdata_beta(mod(tcl, EV) + 1), gridPrice, sigma);
+                    EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
             end
             power_IVA = handlePriceUpdate(bidCurve, clcPrice, mkt );
             IVApowerRecord(iva, t_index) = power_IVA;
             totalPowerIVA = totalPowerIVA + power_IVA;
-            heat_rate_IVA = q1 / p1 * power_IVA - (q1 * p2 - p1 * q2) / p1;
+            heat_rate_IVA = q1 / p1 * power_IVA - (q1 * p2 - p1 * q2) / p1 - psiRecord(1, tcl);
             IVAdata_Ta(iva, mod_t) = theta_a - heat_rate_IVA * TCLdata_R(1, tcl) - (theta_a - heat_rate_IVA * TCLdata_R(1, tcl) - IVAdata_Ta(iva, t_index)) * exp(- T / TCLdata_R(1, tcl) / TCLdata_C(1, tcl));
         end
     end
@@ -344,6 +356,11 @@ for i = 1: I
     if isAging == 1
         isBid = 0;
         transformer_ageing_expo;
+    end
+    if isOccupRandom == 1
+      %根据上一周期预测的当前周期误差
+        IVApsiPreRecord = psiRecord(1, FFA + 1: end); %不考虑RC误差情况下，准确得到上一周期误差
+        %FFA预测在FFAupdate内
     end
 end
 tongji;

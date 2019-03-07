@@ -11,10 +11,12 @@ end
 loadPower = loadPower / max(max(Load)) * LOAD;
 loadPowerRecord = mean(loadPower);
 load('../data/wind_2017');
+maxWind = max(Wind);
+Wind = Wind(14: 26, :);
 windPower = Wind(:, 1 : 96);
 for i = 1 : 6
     windPower = [windPower; Wind(:, i * 96 + 1 : (i + 1) * 96)];  
 end
-windPower = windPower / max(max(Wind)) * WIND;
+windPower = windPower / max(maxWind) * WIND;
 windPowerRecord = mean(windPower);
 clear Load Wind loadPower windPower LOAD WIND

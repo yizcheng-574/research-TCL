@@ -29,10 +29,6 @@ t1 = dt: dt : 24;
 t = T : T :24;
 t2 = 0 : T_tcl : 24;
 
-boxplot(evaluation_ev_finish','Widths',0.3, 'Notch','on','Labels',{'1)', '2)', '3)' '4)'}, 'Colors', [tomato; royalblue; royalblue; royalblue], 'Orientation', 'horizontal'); 
-set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
-xlabel('EV充电完成度(%)')
-ylabel('方案')
 FFApowerAvg = zeros(1, I2);
 TCLpowerAvg_benchmark = zeros(1, I2);
 FFApowerAvg_benchmark = zeros(1, I2);
@@ -149,23 +145,27 @@ for ev = 1 : EV
     evaluation_ev_finish(1, ev) = (max(EVdata_E(ev,:)) - EVdata_mile(1, ev))/ (EVdata_capacity(1, ev) -  EVdata_mile(1,ev));
 end
 %----------------------------------------------------------------------
+% boxplot(evaluation_ev_finish','Widths',0.3, 'Notch','on','Labels',{'1)', '2)', '3)' '4)'}, 'Colors', [tomato; royalblue; royalblue; royalblue], 'Orientation', 'horizontal'); 
+% set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
+% xlabel('EV充电完成度(%)')
+% ylabel('方案')
 %温度越线情况
 % boxplot([evaluation_violation(1:2,1:FFA);evaluation_violation(4, 1:FFA)]','Widths',0.3, 'Notch','on','Labels',{'1)', '2)', '4)'}, 'Colors', [tomato; royalblue; royalblue], 'Orientation', 'horizontal'); 
 % set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
 % xlabel('越限程度(小时)')
 % ylabel('方案')
 %EV充电情况
-figure;
-boxplot(evaluation_ev_finish','Widths',0.3, 'Notch','on','Labels',{'1)', '2)', '3)' '4)'}, 'Colors', [tomato; royalblue; royalblue], 'Orientation', 'horizontal'); 
-set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
-xlabel('EV充电完成度')
-ylabel('方案')
+% figure;
+% boxplot(evaluation_ev_finish','Widths',0.3, 'Notch','on','Labels',{'1)', '2)', '3)' '4)'}, 'Colors', [tomato; royalblue; royalblue], 'Orientation', 'horizontal'); 
+% set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
+% xlabel('EV充电完成度')
+% ylabel('方案')
 %用户成本
-figure;
-boxplot(100 * cost(2:4, :)'./ cost(1,:)','Widths',0.3, 'Notch','on','Labels',{'2)', '3)' '4)'}, 'Colors', [tomato; royalblue; royalblue], 'Orientation', 'horizontal'); 
-set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
-xlabel('各方案用户日成本与方案1的比值(%)')
-ylabel('方案')
+% figure;
+% boxplot(100 * cost(2:4, :)'./ cost(1,:)','Widths',0.3, 'Notch','on','Labels',{'2)', '3)' '4)'}, 'Colors', [tomato; royalblue; royalblue], 'Orientation', 'horizontal'); 
+% set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
+% xlabel('各方案用户日成本与方案1的比值(%)')
+% ylabel('方案')
 %----------------------------------------------------------------------
 %基本仿真数据
 hold on;
@@ -173,9 +173,9 @@ yyaxis left
 Hbar = bar(1:24, 100 * offsetArray(gridPriceRecord, I2/2)/ mkt_max); 
 Hbar(1).FaceColor = [0.8, 0.8, 0.8];
 Hbar(1).EdgeColor = Hbar(1).FaceColor;
-H0 = plot(t, 100 * offsetArray(loadPowerRecord, I/2) / max(loadPowerRecord)); hold on;
+H0 = plot(t, 100 * offsetArray(loadPowerRecord, I/2) / LOAD); hold on;
 set(H0, 'color', [0, 173, 52 ]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-H1 = plot(t, 100 * offsetArray(windPowerRecord, I/2) / max(windPowerRecord));
+H1 = plot(t, 100 * offsetArray(windPowerRecord, I/2) / WIND);
 set(H1, 'color', [0, 93, 186]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
 ylabel('标幺值(%)')
 yyaxis right

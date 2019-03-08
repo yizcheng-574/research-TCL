@@ -1,8 +1,7 @@
-function [ P_max, P_min, P_set, SOA_1 ] = IVABidPara(priceRecord, T_0, T_out, T_max, T_min, R, C, PN, Pmin, psi)
+function [ P_max, P_min, P_set, SOA_1 ] = IVABidPara(priceRecord, T_0, T_out, T_max, T_min, R, C, PN, Pmin, psi, p1, p2, q1, q2, T)
 %底层IVA根据动态方程进行优化, priceArray电价序列, T_0 t-1时刻室内温度，T_out室外温度序列
 %T_min最低室温， T_max最高室温
 %Pset最优当前电价
-global p1 p2 q1 q2 T
 e = exp( - T / R / C);
 denominator = R * (1 - e);
 SOA_0 = (T_0 - T_min) / (T_max - T_min);

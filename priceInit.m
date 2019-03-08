@@ -7,8 +7,8 @@ sigmaRecord(i) = sqrt(mean((RTP(:, i) - gridPriceRecord(i)).^2));
 end
 maxP = max([gridPriceRecord,sigmaRecord]);
 minP = min([gridPriceRecord,sigmaRecord]);
-gridPriceRecord = (gridPriceRecord - minP) / (maxP - minP) * (mkt_max - mkt_min) + mkt_min;
-sigmaRecord = (sigmaRecord - minP) / (maxP - minP) * (mkt_max - mkt_min) + mkt_min;
+gridPriceRecord = (gridPriceRecord - minP) / (maxP - minP) * (1.2 - mkt_min) + mkt_min;
+sigmaRecord = (sigmaRecord - minP) / (maxP - minP) * (1.2 - mkt_min) + mkt_min;
 sigmaRecord(15) = 0.4;
 sigmaRecord(17) = 0.4;
 % sigmaRecord = 0.5 * gridPriceRecord;

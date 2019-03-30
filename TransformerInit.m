@@ -6,7 +6,11 @@ theta_h_record = zeros(1, I);
 d_theta_h1_record = zeros(1, I);
 d_theta_h2_record = zeros(1, I);
 theta_o_record = zeros(1, I);
-tmp = mod(offset / T , I) + 1;
+if isMultiDay == 1
+    tmp = 1;
+else
+    tmp = mod(offset / T , I) + 1;
+end
 theta_h_record(tmp) = theta_o + d_theta_h1 - d_theta_h2; 
 d_theta_h1_record(tmp)= d_theta_h1;
 d_theta_h2_record(tmp)= d_theta_h2;

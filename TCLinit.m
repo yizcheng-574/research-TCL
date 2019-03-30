@@ -1,6 +1,5 @@
-global FFA IVA p1 p2 q1 q2
-
 TCLdata_state = ceil(unifrnd(0, 4, 1, FFA));
+TCLdata_T = zeros(2, FFA + IVA);
 TCLdata_T(1, :) = unifrnd(27.5, 28.5, 1, FFA + IVA); 
 TCLdata_T(2, :) = unifrnd(23.5, 24.5, 1, FFA + IVA); 
 TCLdata_C = unifrnd(0.8 ,1.2, 1, FFA + IVA);
@@ -15,3 +14,11 @@ p2 = -0.4;
 q2 = -0.3;
 sen_index = 1;
 load('../data/Tout.mat');
+ToutRecord = zeros(1, I_day);
+if isMultiDay == 1
+    for i = 1 : 24 / T
+        ToutRecord(i) = mean(Tout(15 * (i - 1) +1: 15 * i));
+    end
+    Tout = ToutRecord;
+    clear ToutRecord
+end

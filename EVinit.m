@@ -1,5 +1,4 @@
 %生成初始的用车习惯
-global EV
 TA_avg = 19.82;
 TA_sigma = 1.92;
 TD_avg = 8.56;
@@ -24,30 +23,30 @@ end
 EVdata_alpha = unifrnd(0,1,1,EV);
 EVdata_beta = unifrnd(0,1,1,EV);
 
-load('../data/bus');
-EVdata_busnum = round(EVdata_busnum / 500 * EV);
-allBus = sum(EVdata_busnum);
-if allBus > EV
-    for busi = 1 : min(nod33, allBus - EV)
-        if EVdata_busnum(busi) > 1
-            EVdata_busnum(busi) = EVdata_busnum(busi) - 1;
-        end
-    end
-elseif allBus < EV
-    for busi = min(nod33, EV - allBus) : -1 : 1
-       EVdata_busnum(busi)=EVdata_busnum(busi)+1;
-    end
-end
-bus1 = 1;
-EVdata_bus = zeros(1, EV);
-for ev = 1 : EV
-    while ev > sum(EVdata_busnum(1 : bus1))
-        bus1 = bus1 + 1;
-    end
-    EVdata_bus(ev) = bus1; 
-end
-tmp = EVdata_bus;
-EVdata_bus = tmp(randperm(numel(tmp)));
+% load('../data/bus');
+% EVdata_busnum = round(EVdata_busnum / 500 * EV);
+% allBus = sum(EVdata_busnum);
+% if allBus > EV
+%     for busi = 1 : min(nod33, allBus - EV)
+%         if EVdata_busnum(busi) > 1
+%             EVdata_busnum(busi) = EVdata_busnum(busi) - 1;
+%         end
+%     end
+% elseif allBus < EV
+%     for busi = min(nod33, EV - allBus) : -1 : 1
+%        EVdata_busnum(busi)=EVdata_busnum(busi)+1;
+%     end
+% end
+% bus1 = 1;
+% EVdata_bus = zeros(1, EV);
+% for ev = 1 : EV
+%     while ev > sum(EVdata_busnum(1 : bus1))
+%         bus1 = bus1 + 1;
+%     end
+%     EVdata_bus(ev) = bus1; 
+% end
+% tmp = EVdata_bus;
+% EVdata_bus = tmp(randperm(numel(tmp)));
 PN=3.7;
 EVdata_initE = unifrnd(0.1, 0.5, EV, 1);
 

@@ -1,30 +1,6 @@
 close all;
 global FFA IVA EV T T_tcl dt I I2 I1 t2
-
-gold = [1 0.843 0];
-gray = [0.9 0.9 0.9];
-black = [0, 0, 0];
-olivedrab = [0.41961 0.55686 0.13725];
-light_olivedrab = [203, 218, 175] / 255;
-yellowgreen = [0.60392 0.80392 0.19608];
-
-firebrick = [0.69804 0.13333 0.13333];
-tomato = [207, 92, 92] / 255;
-
-royalblue = [0.2549 0.41176 0.88235];
-royalblue_dark = [0.15294 0.25098 0.5451];
-darkblue =[0 0 0.5451];
-dodgerblue = [0.11765 0.56471 1];
-light_dodgerblue = [157,197,238]/255;
-
-green = [103, 138 ,38] / 255;
-blue = [109 179 223] / 255;
-purple = [52, 29, 94] / 255;
-
-light_green = [194, 216, 153] / 255;
-light_blue = [168, 204, 226] / 255;
-light_purple = [175, 153, 216] / 255;
-
+load('../data/COLOR');
 t1 = dt: dt : 24;
 t = T : T :24;
 t2 = 0 : T_tcl : 24;
@@ -317,31 +293,19 @@ set(le, 'Box', 'off');
 plotNormalize;
 ylabel('聚合功率(MW)');
 
-if isTCLflex == 1
-    figure; hold on;
-    TOTAL_PLOT = 1;
-    %TCL跟踪曲线和实际响应曲线
-    [~, tcl_max] = max(EVdata_beta);
-    draw(1, EVdata_beta(tcl_max), TCLdata_P(tcl_max, :), TCLpowerRecord(tcl_max, :), TCLdata_PN(tcl_max), TCLdata_Ta(tcl_max, :), ...
-        T_tcl, Tout, TCLdata_T(1, tcl_max), TCLdata_T(2, tcl_max), blue, tomato, light_blue, 0);
-    tcl = 1;
-    draw(2, EVdata_beta(tcl), TCLdata_P(tcl, :), TCLpowerRecord(tcl, :), TCLdata_PN(tcl), TCLdata_Ta(tcl, :),...
-        T_tcl, Tout, TCLdata_T(1, tcl), TCLdata_T(2, tcl),  blue, tomato, light_blue, 0);
-    [~, tcl_min] = min(EVdata_beta);
-    draw(3, EVdata_beta(tcl_min), TCLdata_P(tcl_min, :), TCLpowerRecord(tcl_min, :), TCLdata_PN(tcl_min), TCLdata_Ta(tcl_min, :),...
-        T_tcl, Tout, TCLdata_T(1, tcl_min), TCLdata_T(2, tcl_min),  blue, tomato, light_blue, 1);
-    set(gcf,'unit','normalized','position',[0,0,0.2,0.4]);
-end
+%TCL跟踪曲线和实际响应曲线
+draw(1, EVdata_beta(tcl), TCLdata_P(tcl, :), TCLpowerRecord(tcl, :), TCLdata_PN(tcl), TCLdata_Ta(tcl, :), ...
+    T_tcl, Tout, TCLdata_T(1, tcl), TCLdata_T(2, tcl), blue, tomato, light_blue, 0, dt, I2, I1, t1, t2);
+
 
 %-------------function definition-------------------------------------
-function [] = draw( subNo, beta, P, powerRecord, PN, Ta,...
-    T_tcl, Tout, T_max, T_min, powerColor, temperatureColor, instantPowerColor, showAxis)
-global dt I2 I1 t1 t2 TOTAL_PLOT
+function [] = draw( ~, ~, P, powerRecord, PN, Ta,...
+    T_tcl, Tout, T_max, T_min, powerColor, temperatureColor, instantPowerColor, showAxis, dt, I2, I1, t1, t2)
+figure; hold on;
 P = offsetArray(P, I1 / 2);
 powerRecord = offsetArray(powerRecord, I2 / 2);
 Ta = offsetArray(Ta, I1 / 2);
 Tout = offsetArray(Tout, 720);
-% subplot(TOTAL_PLOT, 1, subNo);
 hold on;
 TCLpowerAvg = zeros(1, I2);
 for ii = 1 : I2
@@ -370,28 +334,5 @@ if showAxis == 1
     xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
 else
     set(gca,'xticklabel','');
-end
-% content = sprintf('\gamma = %2f', beta);
-% title(content)
-end
-
-function [ result ] = offsetArray(array, offset)
-[row, col] = size(array);
-offset = mod(offset, max(row, col));
-if row == 1 %行向量
-    result = [ array(1, offset + 1 : end), array(1, 1: offset)];
-elseif col == 1
-    result = [ array(offset + 1: end, 1); array(1 : offset, 1)];
-else
-    result = [ array(:, offset + 1 : end), array(:, 1: offset)];
-end
-end
-
-function [ result ] = appendStairArray(array)%为stairs作图的数组增加最后一列
-[row, col] = size(array);
-if col > 1 %行向量
-    result = [array, array(end)];
-else
-    result = [array; array(end)];
 end
 end

@@ -4,7 +4,7 @@ clc; clear;
 % load 'D:\CYZ\TCLdata\0228\initData'
 startmatlabpool();
 tic;
-global dt T T_tcl I1 I I2 EV FFA IVA step RATIO p1 p2 q1 q2 psiRecord
+global dt T T_tcl T_mpc I1 I I2
 RATIO = 1;
 EV = 5 * RATIO;%EV总数，额定功率为3.7kW
 FFA = 6 * RATIO;%空调总数
@@ -138,7 +138,6 @@ for i = 1: I
         if isEVflex == 1
             if time >= EVdata(1, ev) || time < EVdata(2,ev)
                 %预测未来电价
-                k1 = 1;
                 if time >= EVdata(1, ev)
                     prePrice = [ gridPriceRecord4(t_index : I ) , gridPriceRecord4(1 : floor( EVdata(2,ev) / T)) ];
                     remain_t =  EVdata(2,ev) + 24 - time;
@@ -146,45 +145,9 @@ for i = 1: I
                     prePrice = gridPriceRecord4(t_index : floor( EVdata(2,ev) / T));
                     remain_t =  EVdata(2,ev) - time;
                 end
-                [Pmax, Pmin, ~] = EVBidPara(T, tmp_E(ev), EVdata_alpha(ev), remain_t, ...
-                    EVdata_mile(ev), EVdata_capacity(ev), PN);
-                %底层优化算法
-                if hasCongest == 1
-                    delta_E = max(0, 0.8 * EVdata_capacity(ev) + (1-0.8) * EVdata_mile(ev) - tmp_E(ev));
-                else
-                    delta_E = max(0, EVdata_alpha(ev) * EVdata_capacity(ev) + (1 - EVdata_alpha(ev)) * EVdata_mile(ev) ...
-                        - tmp_E(ev));
-                end
-                if delta_E==0
-                    Pavg=0;
-                else
-                    [meanpre_price_order, tmp1]= sort(prePrice);
-                    tmp2 = ceil(delta_E / T / PN);
-                    if tmp2 >= length(meanpre_price_order)
-                        Pavg = min(PN, delta_E / T / tmp2);
-                    else
-                        min_bidprice = meanpre_price_order(tmp2);
-                        if tmp2 + 1 <= length(meanpre_price_order)
-                            tmp3 = meanpre_price_order(tmp2 + 1);
-                            while tmp3 - min_bidprice < tolerance
-                                tmp2 = tmp2 + 1;
-                                if tmp2 + 1 > length(meanpre_price_order)
-                                    break;
-                                else
-                                    tmp3 = meanpre_price_order(tmp2 + 1);
-                                end
-                            end
-                        end
-                        [tmp4, tmp5] = find(tmp1 == 1);
-                        if tmp5 <= tmp2
-                            Pavg = delta_E / T / tmp2;
-                        else
-                            Pavg = 0;
-                        end
-                    end
-                end
-                Pavg = max(Pmin,Pavg);
-                Pavg = min(Pmax,Pavg);
+                [Pmax, Pmin, Pavg] = EVBidPara(T, tmp_E(ev), EVdata_alpha(ev), remain_t, ...
+                    EVdata_mile(ev), EVdata_capacity(ev), PN, prePrice);
+                
                 EVmaxPowerRecord(ev, t_index) = Pmax;
                 EVavgPowerRecord(ev, t_index) = Pavg;
                 EVminPowerRecord(ev, t_index) = Pmin;

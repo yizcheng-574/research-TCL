@@ -1,5 +1,5 @@
 global step
-% 
+% 求解常微分方程
 R = 8;
 x = 0.8;
 y = 1.6;
@@ -13,10 +13,15 @@ k22 = 2;
 if isBid == 1
     K = [0: 0.005 : 0.7 0.71 : 0.01 :1.5]; %load factor
 else
-    d_theta_h1 = d_theta_h1_record(mod_t_1) ;
-    d_theta_h2 = d_theta_h2_record(mod_t_1) ;
-    theta_o = theta_o_record(mod_t_1);
-    K =  tielineRecord(mod_t_1) / P_rated;
+    if isMultiDay == 0
+        tmp_t_index = mod_t_1;
+    else
+        tmp_t_index = t_index;
+    end
+    d_theta_h1 = d_theta_h1_record(tmp_t_index) ;
+    d_theta_h2 = d_theta_h2_record(tmp_t_index) ;
+    theta_o = theta_o_record(tmp_t_index);
+    K =  tielineRecord(tmp_t_index) / P_rated;
 end
 Tmin = T * 60;
 KR = (1 + K .^ 2 * R) ./ (1 + R);
@@ -41,7 +46,6 @@ if isBid == 1
     dK_dP = 1 / P_rated;
     dC_dP = 1 / T * dC_dL .* dL_dtheta_h .* dtheta_h_dK .* dK_dP;
     
-    maxp = max(dC_dP);
     tielineCurve = zeros(1, step + 1);
     k_index = 1;
     for q = 1: step + 1
@@ -53,6 +57,7 @@ if isBid == 1
         else
             for tmp_i = k_index : length(K) - 1
                 if dC_dP(tmp_i) <= price_tmp && dC_dP(tmp_i + 1) >= price_tmp
+                    k_index = tmp_i;
                     break; 
                 end
             end
@@ -71,9 +76,14 @@ if isBid == 1
     end
     tielineCurve = -tielineCurve;
 else
-    theta_h_record(mod_t)= theta_h;
-    d_theta_h1_record(mod_t)= d_theta_h1;
-    d_theta_h2_record(mod_t)= d_theta_h2;
-    theta_o_record(mod_t) = theta_o;
-    DL_record(mod_t) = DL;
+    if isMultiDay == 0
+        tmp_t_index = mod_t;
+    else
+        tmp_t_index = t_index + 1;
+    end
+    theta_h_record(tmp_t_index)= theta_h;
+    d_theta_h1_record(tmp_t_index)= d_theta_h1;
+    d_theta_h2_record(tmp_t_index)= d_theta_h2;
+    theta_o_record(tmp_t_index) = theta_o;
+    DL_record(tmp_t_index) = DL;
 end

@@ -1,3 +1,4 @@
+% on-off 控制，仿真显示舒适度较低
 T0 = theta_a;
 if isMultiDay == 1
     tmp_Ta = TCLdata_Ta(:, t_index);

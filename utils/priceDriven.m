@@ -114,44 +114,4 @@ for day = 1 : DAY
 end
 EV_totalpowerRecord = sum(EVpowerRecord);
 IVA_totalpowerRecord = sum(IVApowerRecord);
-%计算老化成本
-if isAging == 0 
-    for day = 1 : DAY
-        for i = 1 : I_day
-            isBid = 0;
-            t_index = (day - 1) * I_day + i;
-            theta_a = Tout(i);
-            transformer_ageing_expo;
-        end
-    end
-end
-
-%计算配网成本
-DSO_cost(1) = sum(DL_record) * install_cost / expectancy;%变压器老化成本
-DSO_cost(2) = tielineRecord * gridPriceRecord4' * T; %配网总用电成本
-
-%各TCL实际成本和优化所得成本
-%统计单个TCL电费
-% if isTCLflex == 1
-%     IVAdata_cost = priceRecord * IVApowerRecord'* T;
-% else
-%     TCLdata_cost = priceRecord * TCLdata_P(1: FFA, :)' * T;
-%     IVAdata_cost =  priceRecord * TCLdata_P(FFA +1 : end, :)'* T;
-% end
-% 
-% EVdata_cost = priceRecord * EVpowerRecord'* T;
-
-%%price volatility index
-if exist('priceRecord') == 1
-    cnt = 0;
-    for i = 2 : I
-        cnt = cnt + (priceRecord(i) - priceRecord(i - 1))^2;
-    end
-    evaluation_price_volatility = sqrt(cnt/ (I - 1)) / (mkt_max - mkt_min);
-end
-%%load volatity
-cnt = 0;
-for i = 2 : I
-    cnt = cnt + (tielineRecord(i) - tielineRecord(i - 1))^2;
-end
-evaluation_load_volatility =  sqrt(cnt/ (I - 1)) / tielineBuy;
+cal_cost;

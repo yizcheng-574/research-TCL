@@ -1,18 +1,11 @@
+% 针对 UNCONTROLLED, EV ONLY, EV + HVAC, aging considered, UNCOORDINATED五个进行对比
 
 clc;clear;
 close all;
 addPath;
 load('../../data/COLOR');
-macPath = '../../data/0702-1';
+macPath = '../../data/0706-1';
 load([macPath, '/mode']);
-yyaxis left
-load([macPath, '/modeAging'], 'tielineRecord', 'priceRecord', 'DSO_cost', 'gridPriceRecord4'); 
-plot(tielineRecord,'k'); hold on; sum(DSO_cost)/sum(tielineRecord)
-load([macPath, '/modePD'], 'tielineRecord','DSO_cost'); 
-plot(tielineRecord);sum(DSO_cost)/sum(tielineRecord)
-yyaxis right
-plot(priceRecord); 
-plot(gridPriceRecord4); 
 
 global totalCostRecord relativeAgingRecord lfRecord
 totalCostRecord = zeros(1, 5);
@@ -215,7 +208,9 @@ load([macPath, '/modeAging'], 'theta_h_record');
 h4 = plot(t3, theta_h_record, 'Color', firebrick, 'LineStyle', '-', 'LineWidth', 1.5);
 load([macPath, '/modePD'], 'theta_h_record'); 
 h5 = plot(t3, theta_h_record, 'Color', darkblue, 'LineStyle', ':', 'LineWidth', 2); 
-plot([0, 34 * 7], [120,120], 'LineStyle', '--', 'LineWidth', 0.5, 'Color', firebrick)
+plot([0, 34 * 7], [120,120], 'LineStyle', '--', 'LineWidth', 0.5, 'Color', firebrick);
+ plot([0, 34 * 7], [140,140], 'LineStyle', '--', 'LineWidth', 0.5, 'Color', tomato);
+
 ylabel('temperature(^oC)')
 title('hot spot temperature');
 xlim([0, 24 * 7]);
@@ -248,139 +243,3 @@ xlim([0, 24 * 7]);
 xticks(0 : 12 : 24 * 7);
 xlabel('t(day)')
 
-%FFA群体跟踪精度
-%{
-figure; hold on;
-H1 = stairs(t1, TCLinstantPowerRecord/1000); hold on;
-set(H1, 'color', [109, 111, 223]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-TCLinstantPower_avg = zeros(1, DAY / T_tcl);
-for i = 1 : DAY * 24/ T_tcl
-    TCLinstantPower_avg(i) = mean(TCLinstantPowerRecord((i - 1) * (T_tcl /dt) + 1 : i * T_tcl / dt));
-end
-H0 = stairs(t0 -1, TCLinstantPower_avg/ 1000);
-set(H0, 'color', light_blue, 'LineWidth', 0.5, 'LineStyle', '-', 'marker', 'none');
-H2 = stairs(T_tcl : T_tcl : DAY * 24, sum(TCLpowerRecord)/1000);
-set(H2, 'color', blue, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-le = legend([H0, H1, H2, H3, H4], '实际功率', '1h平均功率', '出清功率(目标功率)', '不控实际功率', '不控平均功率', 'Orientation', 'vertical'); set(le, 'Box', 'off');
-ylabel('FFA聚合功率(MW)')
-ylim([min(sum(TCLdata_P_benchmark(1:FFA, :)/1000)) / 1.1, max(sum(TCLdata_P_benchmark(1:FFA, :)/1000)) * 1.1])
-plotNormalize;
-%}
-%FFA成本偏差
-% H0 = scatter(TCLdata_cost(1,:), TCLdata_cost(2,:),10, watermelon, 'filled');
-% alpha(0.5);
-% figure;
-% boxplot(100 * (TCLdata_cost(1,:) -  TCLdata_cost(2,:))./ TCLdata_cost(2,:), 0, '+', 0);
-% xlabel('相对误差(%)')
-% set(gcf,'unit','normalized','position',[0,0,0.25,0.1]);
-% set(gca,'YTicklabel',{''})
-
-%----------------------------------------------------------------------
-
-
-%TCL跟踪曲线和实际响应曲线
-% draw(1, EVdata_beta(tcl), TCLdata_P(tcl, :), TCLpowerRecord(tcl, :), TCLdata_PN(tcl), TCLdata_Ta(tcl, :), ...
-%     T_tcl, Tout, TCLdata_T(1, tcl), TCLdata_T(2, tcl), blue, tomato, light_blue, 0, dt, I2, I1, t1, t2);
-
-
-%-------------function definition-------------------------------------
-function [] = draw( ~, ~, P, powerRecord, PN, Ta,...
-    T_tcl, Tout, T_max, T_min, powerColor, temperatureColor, instantPowerColor, showAxis, dt, I2, I1, t1, t2)
-figure; hold on;
-P = offsetArray(P, I1 / 2);
-powerRecord = offsetArray(powerRecord, I2 / 2);
-Ta = offsetArray(Ta, I1 / 2);
-Tout = offsetArray(Tout, 720);
-hold on;
-TCLpowerAvg = zeros(1, I2);
-for ii = 1 : I2
-    TCLpowerAvg(1, ii) = mean(P(1, (ii - 1) * T_tcl / dt + 1 : ii * T_tcl / dt));
-end
-yyaxis left
-% H0 = fill([t1, fliplr(t1)], [zeros(1, I1), fliplr(P)], instantPowerColor);
-% alpha(0.5);set(H0,'DisplayName', '出清功率', {'LineStyle'}, {'none'});
-H1 = stairs(t2, appendStairArray(powerRecord), 'color', powerColor, 'LineWidth', 2, 'DisplayName', '出清功率');
-H2 = stairs(t2, appendStairArray(TCLpowerAvg) , 'color', powerColor, 'LineWidth', 2, 'DisplayName', '平均功率', 'LineStyle', ':');
-ylabel('单个FFA功率(kW)');
-ylim([0, PN]);
-yyaxis right
-TaNormalize = (Ta - T_min) / (T_max - T_min) * 100;
-H3 = plot(t1, TaNormalize , 'color', temperatureColor, 'LineWidth', 1,'DisplayName', '室内温度');
-plot(t1, [zeros(1, I1); 100 * ones(1, I1)],...
-    'color', temperatureColor, 'LineWidth' , 0.2, 'LineStyle', '-.', 'DisplayName', '室温上下限');
-ylabel('SOA(%)');
-
-le = legend([H1, H2, H3], '出清功率', '平均功率', 'SOA', 'Orientation','horizontal'); set(le ,'Box', 'off');
-ymin =  min(0, min(TaNormalize));
-ymax = max(100, max(TaNormalize));
-ylim([ymin - 10, ymax + 10]);
-plotNormalize;
-if showAxis == 1
-    xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
-else
-    set(gca,'xticklabel','');
-end
-end
-
-function [] = drawPower(path, subPath, title1, t, t2, c1, c2, c3, c4, Linestyle, index)
-global totalCostRecord relativeAgingRecord lfRecord
-theta_h_record = 1;
-load([path, subPath], ...
-    'tielineRecord', 'EV_totalpowerRecord', 'TCL_totalpowerRecord', 'IVA_totalpowerRecord', 'DSO_cost', 'tielineBuy', 'DL_record', 'DAY', 'T', 'I');
-figure;
-hold on;
-maxY = max(tielineRecord)/1000 * 1.05;
-Ht = stairs(t, tielineRecord / 1000, 'color', c1, 'LineWidth', 1.5, 'LineStyle', Linestyle, 'marker', 'none');
-Hev = stairs(t, EV_totalpowerRecord(1:length(t)) / 1000, 'color', c2, 'LineWidth', 1.5, 'LineStyle', Linestyle, 'marker', 'none');
-Htcl = stairs(t, (TCL_totalpowerRecord + IVA_totalpowerRecord) / 1000, 'color', c3, 'LineWidth', 1.5, 'LineStyle', Linestyle, 'marker', 'none');
-plot(t2, tielineBuy / 1000 * ones(1, length(t2)), 'color', c4, 'LineWidth' , 1, 'LineStyle', '--', 'DisplayName', '功率上限', 'marker', 'none');
-for d = 1: DAY - 1
-drawVerticalLine(24 * d, 0, maxY, 'black', ':')
-end
-ylabel('power(MW)')
-xlim([0, 24 * DAY]);
-ylim([0, maxY])
-xticks(0 : 12 : 24 * DAY);
-xticklabels({ '0', '12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5', '12:00', '6', '12:00', '7'});
-% set(gca,'xticklabel','');
-set(gcf,'unit','normalized','position',[0,0,0.3,0.15]); title(title1)
-le = legend([Ht, Hev, Htcl], 'transformer', 'EV', 'HVAC', 'Orientation','horizontal'); set(le ,'Box', 'off');
-
-DSO_cost
-totalCostRecord(index)= sum(DSO_cost);
-relativeAgingRecord(index) = sum(DL_record)/24/60;
-cnt = 0;
-for i = 2 : I
-    cnt = cnt + (tielineRecord(i) - tielineRecord(i - 1))^2;
-end
-lfRecord(index) = mean(tielineRecord) / max(tielineRecord);
-end
-
-function drawPrice(path, subPath, t, c1, c2)
-hold on;
-load([path, subPath], 'priceRecord', 'gridPriceRecord4', 'mkt_max', 'mkt_min', 'DAY', 'I');
-% Hbar2 = bar(t - 0.25,  [gridPriceRecord4; (priceRecord - gridPriceRecord4)]', 'stacked');
-% Hbar2(1).FaceColor = c1;
-% Hbar2(1).EdgeColor = Hbar2(1).FaceColor;
-% Hbar2(2).FaceColor = c2;
-% Hbar2(2).EdgeColor = 'none';
-Hbar = fill([t, fliplr(t)],  [gridPriceRecord4, fliplr(priceRecord)], c2);
-Hbar.EdgeColor = 'none';
-Hline = plot(t, gridPriceRecord4, 'LineWidth', 1, 'Color', c1);
-ylabel('electricity price(yuan/kWh)');
-ylim([min(gridPriceRecord4) * 0.9, mkt_max]);
-le = legend([Hline, Hbar], 'utility price', 'clearing price', 'Orientation','horizontal'); set(le ,'Box', 'off');
-xlim([0, 24 * DAY]);
-xticks(0 : 12 : 24 * DAY);
-xticklabels({ '0', '12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5', '12:00', '6', '12:00', '7'});
-set(gcf,'unit','normalized','position',[0,0,0.25,0.3]);
-cnt = 0;
-for i = 2 : I
-    cnt = cnt + (priceRecord(i) - priceRecord(i - 1))^2;
-end
-evaluation_price_volatility = sqrt(cnt/ (I - 1)) / (mkt_max - mkt_min)
-end
-
-function drawVerticalLine(t, st, en, c, linestyle)
-plot([t, t], [st, en], 'Color', c, 'LineStyle', linestyle, 'LineWidth', 1);
-end

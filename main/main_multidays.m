@@ -3,7 +3,7 @@ tic;
 
 tielineRecord = zeros(1,I); % 自联络线购电量
 gridPriceRecord4 = zeros(1,I);
-if isTCLflex == 1 || isEVflex == 1
+if isTCLflex ~= 0 || isEVflex == 1
     priceRecord = zeros(1,I); % 考虑预测误差，随机优化的出清电价
     hasCongest = 0;
 end
@@ -25,7 +25,7 @@ end
 
 TCLinstantPowerRecord = zeros(1, I1);
 
-if isTCLflex == 1   
+if isTCLflex ~= 0   
     IVApowerRecord = zeros(IVA, I);
     IVAsetPowerRecord = zeros(IVA, 1);
     IVAmaxPowerRecord = zeros(IVA, 1);
@@ -119,7 +119,7 @@ for day = 1 : DAY
             EVpowerRecord(:, t_index) = tmp_P;
         end
 
-        if isTCLflex == 1
+        if isTCLflex ~= 0
             totalPowerIVA = 0;
             N = T_mpc / T;
             IVAmpcPriceRecord = getTout(gridPriceRecord4, t_index, N);     
@@ -133,9 +133,11 @@ for day = 1 : DAY
                     p1, p2, q1, q2, T, ratioIVA);
                 IVAmaxPowerRecord(iva) = Pmax;
                 IVAsetPowerRecord(iva) = Pset;
-                IVAminPowerRecord(iva) = Pmin;            
-                bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);          
-            end            
+                IVAminPowerRecord(iva) = Pmin;
+                if isTCLflex == 1
+                    bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);          
+                end
+            end
             if mod(t_index, I_tcl) == 1
                 totalPowerFFA = 0;
                 N = T_mpc / T_tcl;
@@ -155,8 +157,16 @@ for day = 1 : DAY
                     bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
                 end
             end
+            if isTCLflex == 2
+                totalPowerIVA = sum(IVAsetPowerRecord);
+                IVApowerRecord(:, t_index) = IVAsetPowerRecord;
+                if mod(t_index, I_tcl) == 1
+                    totalPowerFFA = sum(TCLsetPowerRecord);
+                    TCLpowerRecord(:, t_index_tcl) = TCLsetPowerRecord;
+                end
+            end
         else
-            TCLuncontrolled;
+            TCLuncontrolledComfort;
             totalPowerFFA =sum(TCLdata_P(1: FFA, t_index));
             totalPowerIVA = sum(TCLdata_P(FFA + 1: FFA + IVA, t_index));
         end
@@ -193,14 +203,16 @@ for day = 1 : DAY
         EVpowerRecord(:, t_index) = tmp_P;
 
         % FFA
-        if isTCLflex == 1
+        if isTCLflex ~= 0
             if mod(t_index, I_tcl) == 1
-                parfor tcl = 1 : FFA
-                    bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl), TCLminPowerRecord(tcl), TCLsetPowerRecord(tcl),...
-                            EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
-                    power_TCL = handlePriceUpdate(bidCurve, clcPrice, mkt );
-                    TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
-                    totalPowerFFA = totalPowerFFA + power_TCL;
+                if isTCLflex == 1
+                    parfor tcl = 1 : FFA
+                        bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl), TCLminPowerRecord(tcl), TCLsetPowerRecord(tcl),...
+                                EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
+                        power_TCL = handlePriceUpdate(bidCurve, clcPrice, mkt );
+                        TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
+                        totalPowerFFA = totalPowerFFA + power_TCL;
+                    end
                 end
  %                  if isEVflex == 1 && isAging == 1%还要记录实际跟踪情况
  %                      FFAupdate;
@@ -224,13 +236,15 @@ for day = 1 : DAY
         TCL_totalpowerRecord(t_index) = totalPowerFFA;
         
         %IVA
-        if isTCLflex == 1
-            parfor iva = 1 : IVA
-                bidCurve = EVbid(mkt, IVAmaxPowerRecord(iva), IVAminPowerRecord(iva), IVAsetPowerRecord(iva),...
-                        EVdata_beta(mod( iva + FFA - 1, EV) + 1), gridPrice, sigma);
-                power_IVA = handlePriceUpdate(bidCurve, clcPrice, mkt );
-                IVApowerRecord(iva, t_index) = power_IVA;
-                totalPowerIVA = totalPowerIVA + power_IVA;
+        if isTCLflex ~= 0
+            if isTCLflex == 1
+                parfor iva = 1 : IVA
+                    bidCurve = EVbid(mkt, IVAmaxPowerRecord(iva), IVAminPowerRecord(iva), IVAsetPowerRecord(iva),...
+                            EVdata_beta(mod( iva + FFA - 1, EV) + 1), gridPrice, sigma);
+                    power_IVA = handlePriceUpdate(bidCurve, clcPrice, mkt );
+                    IVApowerRecord(iva, t_index) = power_IVA;
+                    totalPowerIVA = totalPowerIVA + power_IVA;
+                end
             end
             tmp_P = IVApowerRecord(:, t_index);
             tmp_Ta = IVAdata_Ta(:, t_index);
@@ -252,62 +266,4 @@ for day = 1 : DAY
 end
 
 toc;
-%计算老化成本
-if isAging == 0 
-    for day = 1 : DAY
-        for i = 1 : I_day
-            isBid = 0;
-            t_index = (day - 1) * I_day + i;
-            theta_a = Tout(i);
-            transformer_ageing_expo;
-        end
-    end
-end
-if exist('IVAdata_Ta') == 1
-    tmpT = [TCLdata_Ta;IVAdata_Ta];
-else
-   tmpT = TCLdata_Ta;
-end
-TCLdata_Ta_normalize = zeros(IVA+FFA, t_index + 1);
-for iva = 1: FFA + IVA
-    TCLdata_Ta_normalize(iva, :) = (tmpT(iva, :) - TCLdata_T(2, iva)) / (TCLdata_T(1, iva) - TCLdata_T(2, iva));
-end
-penaltyFFA = zeros(1, IVA + FFA);
-denominator = 2.7 * TCLdata_R .* (1 - exp( - T_tcl ./ TCLdata_R ./ TCLdata_C));
-a = (TCLdata_T(1,:) - TCLdata_T(2,:)) ./ denominator;
-for ffa = 1 :FFA
-    penaltyFFA(ffa) = sum((TCLdata_Ta_normalize(ffa,2:end) - 0.5).^2 .* gridPriceRecord4 * a(ffa) * ratioFFA);
-end
-for iva = 1: IVA
-    tcl = iva + FFA;
-    penaltyFFA(tcl) =sum((TCLdata_Ta_normalize(tcl,2:end) - 0.5).^2 .* gridPriceRecord4 * (TCLdata_PN(1, tcl)-IVAdata_Pmin(1, iva)) * ratioIVA);
-end
-%计算配网成本
-DSO_cost(1) = sum(DL_record) * install_cost / expectancy;%变压器老化成本
-DSO_cost(2) = tielineRecord * gridPriceRecord4' * T; %配网总用电成本
-DSO_cost(3) = sum(penaltyFFA) * T;
-%各TCL实际成本和优化所得成本
-%统计单个TCL电费
-% if isTCLflex == 1
-%     IVAdata_cost = priceRecord * IVApowerRecord'* T;
-% else
-%     TCLdata_cost = priceRecord * TCLdata_P(1: FFA, :)' * T;
-%     IVAdata_cost =  priceRecord * TCLdata_P(FFA +1 : end, :)'* T;
-% end
-% 
-% EVdata_cost = priceRecord * EVpowerRecord'* T;
-
-%%price volatility index
-if exist('priceRecord') == 1
-    cnt = 0;
-    for i = 2 : I
-        cnt = cnt + (priceRecord(i) - priceRecord(i - 1))^2;
-    end
-    evaluation_price_volatility = sqrt(cnt/ (I - 1)) / (mkt_max - mkt_min);
-end
-%%load volatity
-cnt = 0;
-for i = 2 : I
-    cnt = cnt + (tielineRecord(i) - tielineRecord(i - 1))^2;
-end
-evaluation_load_volatility =  sqrt(cnt/ (I - 1)) / tielineBuy;
+cal_cost;

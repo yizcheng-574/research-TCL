@@ -21,8 +21,8 @@ P_min = max(P_min, 0);
 P_max = min(PN, P_max);
 P_max = max(P_max, 0);
 A2_main = diag(a * ones(1, N), 0) + diag(b * ones(1, N - 1), -1);
-H = - 2 * diag(priceRecord) * a * 0.7;
-f = (priceRecord' * A2_main + priceRecord' * a * 0.7)';
+H = - 2 * diag(priceRecord) * a * ratioFFA;
+f = (priceRecord' * A2_main + priceRecord' * a * ratioFFA)';
 
 b22 =  PN - c; b22(1) = b22(1) - b * SOA_0;
 b21 = - c; b21(1) = b21(1) - b * SOA_0;

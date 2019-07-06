@@ -1,7 +1,8 @@
-d_theta_o = 42.3; %K
+MAX_TEMP = 120; % C
+d_theta_o = 42.3; % K
 d_theta_h1 = 53.2;
 d_theta_h2= 26.6;
-theta_o = 63.9;%C
+theta_o = 63.9; % C
 theta_h_record = zeros(1, I);
 d_theta_h1_record = zeros(1, I);
 d_theta_h2_record = zeros(1, I);

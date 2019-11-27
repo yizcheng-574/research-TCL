@@ -5,7 +5,7 @@ tielineRecord = zeros(1,I);%自联络线购电量
 gridPriceRecord4 = zeros(1,I);
 
 EVpowerRecord = zeros(EV, I);
-EVdata_E = zeros(EV, I);
+EVdata_E = zeros(maxEV, I);
 EVdata_E(:, 1) = EVdata_initE .* EVdata_capacity';
 
 IVApowerRecord = zeros(IVA, I);
@@ -50,7 +50,7 @@ for day = 1 : DAY
         parfor ev = 1 : EV
              tmp_E_next(ev) = tmp_E(ev) + tmp_P(ev) * T;
         end
-        EVdata_E(:, t_index + 1) = tmp_E_next;
+        EVdata_E(1:EV, t_index + 1) = tmp_E_next;
         
         %IVA
         N = T_mpc / T;

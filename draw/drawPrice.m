@@ -15,7 +15,7 @@ le = legend([Hline, Hbar], 'utility price', 'clearing price', 'Orientation','hor
 xlim([0, 24 * DAY]);
 xticks(0 : 12 : 24 * DAY);
 xticklabels({ '0', '12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5', '12:00', '6', '12:00', '7'});
-set(gcf,'unit','normalized','position',[0,0,0.25,0.3]);
+set(gcf,'unit','normalized','position',[0,0,0.3,0.25]);
 cnt = 0;
 for i = 2 : I
     cnt = cnt + (priceRecord(i) - priceRecord(i - 1))^2;

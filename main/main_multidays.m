@@ -13,7 +13,7 @@ TCL_totalpowerRecord = zeros(1, I);
 IVA_totalpowerRecord = zeros(1, I);
 
 EVpowerRecord = zeros(EV, I);
-EVdata_E = zeros(EV, I);
+EVdata_E = zeros(maxEV, I);
 EVdata_E(:, 1) = EVdata_initE .* EVdata_capacity';
 totalPowerEV = 0;
 
@@ -198,7 +198,7 @@ for day = 1 : DAY
                 tmp_E_next(ev) = tmp_E(ev) +tmp_P(ev) * T;
             end
         end
-        EVdata_E(:, t_index + 1) = tmp_E_next;
+        EVdata_E(1:EV, t_index + 1) = tmp_E_next;
         EV_totalpowerRecord(t_index) = totalPowerEV;
         EVpowerRecord(:, t_index) = tmp_P;
 

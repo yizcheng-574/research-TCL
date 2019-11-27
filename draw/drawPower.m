@@ -28,7 +28,8 @@ xticklabels({'12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5
 % set(gca,'xticklabel','');
 set(gcf,'unit','normalized','position',[0,0,0.3,0.15]); title(title1)
 if index == 1
-    le = legend([Ht, Hev, Htcl], 'transformer', 'EV', 'HVAC', 'Orientation','horizontal'); set(le ,'Box', 'off');
+    le = legend([Ht, Hev, Htcl], 'transformer', 'EV', 'HVAC', 'Orientation','horizontal');
+%     set(le ,'Box', 'off', 'NumColumns', 3);
 end
 DSO_cost
 totalCostRecord(index)= sum(DSO_cost);

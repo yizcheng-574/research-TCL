@@ -1,7 +1,7 @@
 addPath;warning('off');
 startmatlabpool();
 clc; clear;
-path = '..\..\data\penetration';
+path = '..\..\data\1127';
 dataPath = [path, '\data'];
 DAY = 7;
 RATIO = 100;
@@ -30,21 +30,22 @@ if exist('DAY', 'var') == 1
 else
     isMultiDay = 0;
 end
-mktInit;
-priceInit;
-EVinit;
-TCLinit;
-maxEV = EV;
-clear EV
-save(dataPath);
+% mktInit;
+% priceInit;
+% EVinit;
+% TCLinit;
+% maxEV = EV;
+% clear EV
+% save(dataPath);
 modeType = [
-    0, 0, 0;
-    1, 1, 0;
-    1, 1, 1;
+    1, 1, 1; % Case I - TEC
+    1, 1, 0; % Case II - TEC w/o ACLs  
+    0, 1, 1; % Case III- TEC w/o smart overloading management
+    0, 0, 0; % Case V - uncontrolled
 ];
-for penetration = 4 : 2: 10
+for penetration = 10
     % TC方案，对EV、TCL进行优化结果比较
-    for mode = 1:3
+    for mode = 1: 4
         clearvars -except modeType mode dataPath penetration EV
         load(dataPath);
         EV = 5 * RATIO * penetration / 10;
@@ -53,20 +54,21 @@ for penetration = 4 : 2: 10
         isTCLflex = modeType(mode, 3);
         main_multidays;
         if mode == 1
-            save([path, '\mode', num2str(penetration)]);
+%             save([path, '\TEC', num2str(penetration)]);
+              save([path, '\TEC']);
         elseif mode == 2
-            save([path, '\modeEV', num2str(penetration)]);
+            save([path, '\TEC_wo_ACLs']);
         elseif mode == 3
-            save([path, '\modeTCL', num2str(penetration)]);
+            save([path, '\TEC_wo_SOM']);
         else
-            save([path, '\modeAging', num2str(penetration)]);
+            save([path, '\uncontrolled']);
         end
     end
     clearvars -except dataPath modeType mode penetration RATIO 
     load(dataPath);
     EV = 5 * RATIO * penetration / 10;
-    priceDriven;
-    save([path, '\modePD', num2str(penetration)]);
+    priceDriven; % Case IV - non-coordinated
+    save([path, '\non_coordinated']);
     clearvars -except dataPath modeType mode penetration RATIO 
 end
 closematlabpool();

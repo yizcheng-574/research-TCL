@@ -25,8 +25,8 @@ yrs = 20;
 eta = 0.9;
 
 step = 100;%投标精度
-mkt_min = 0.5;
-mkt_max = 1.4;
+mkt_min = 0.1;
+mkt_max = 1.5;
 
 mkt = [mkt_min,mkt_max,step];
 pCurve = (mkt_min:(mkt_max-mkt_min)/step:mkt_max);

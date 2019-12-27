@@ -2,15 +2,18 @@ function drawPrice(path, subPath, t, c1, c2, index)
 figure;
 hold on;
 load([path, subPath], 'priceRecord', 'gridPriceRecord4', 'mkt_max', 'mkt_min', 'DAY', 'I');
-Hbar = fill([t, fliplr(t)],  [gridPriceRecord4, fliplr(priceRecord)], c2);
-Hbar.EdgeColor = 'none';
-Hline = plot(t, gridPriceRecord4, 'LineWidth', 1, 'Color', c1);
+Hbar1 = fill([t, fliplr(t)],  [gridPriceRecord4, fliplr(priceRecord)], c2);
+Hbar1.EdgeColor = 'none';
+Hbar2 = fill([t, fliplr(t)], [min(gridPriceRecord4) * ones(1,length(t)), fliplr(gridPriceRecord4)], [0.8, 0.8, 0.8]);
+Hbar2.EdgeColor = 'none';
+Hbar2.FaceColor = 'none';
+% Hline = plot(t, gridPriceRecord4, 'LineWidth', 1, 'Color', c1);
 if (index ==2)
     ylabel('price(yuan/kWh)');
 end
-ylim([min(gridPriceRecord4) * 0.9, mkt_max]);
+% ylim([min(gridPriceRecord4) * 0.9, mkt_max]);
 if (index == 1)
-    le = legend([Hline, Hbar], 'utility price', 'clearing price', 'Orientation','horizontal');
+    le = legend([Hbar2, Hbar1], 'utility price', 'clearing price', 'Orientation','horizontal');
     set(le ,'Box', 'off');
 end
 xlim([0, 24 * DAY]);

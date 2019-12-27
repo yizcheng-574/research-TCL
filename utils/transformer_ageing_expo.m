@@ -10,7 +10,7 @@ k11 = 1;
 k21 = 1;
 k22 = 2;
 if isBid == 1
-    K = [0: 0.005 : 0.7 0.71 : 0.01 :1.5]; %load factor
+    K = [0: 0.005 : 0.7 0.71 : 0.01 :1.15]; %load factor
 else
     if isMultiDay == 0
         tmp_t_index = mod_t_1;

@@ -22,7 +22,7 @@ if isEVflex == 1
     EVmaxPowerRecord = zeros(EV, 1);
     EVminPowerRecord = zeros(EV, 1);
 end
-
+isUserAtHome = zeros(EV, 1);
 TCLinstantPowerRecord = zeros(1, I1);
 
 if isTCLflex ~= 0   
@@ -82,14 +82,27 @@ for day = 1 : DAY
         
         totalPowerEV = 0;
         tmp_E = abs(EVdata_E(:, t_index));
+        
+        
         parfor ev = 1 : EV
             if time >= EVdata(2, ev) && time - T < EVdata(2, ev)
                 tmp_E(ev) = max(tmp_E(ev) - EVdata_mile(ev), 0);
             end
+            if time >= EVdata(1, ev) || time < EVdata(2,ev)
+                isUserAtHome(ev) = 1;
+            else
+                isUserAtHome(ev) = 0;
+            end
         end
+
+        isTCLon = repmat(isUserAtHome, 2, 1);
+        isFFAon = isTCLon(1:FFA, :);
+        isIVAon = ones(IVA, 1);
+%         isIVAon = isTCLon(FFA + 1:end, :);
+
         if isEVflex == 1 
             parfor ev = 1 : EV
-                if time >= EVdata(1, ev) || time < EVdata(2,ev)
+                if isUserAtHome(ev)
                      % 预测未来电价
                     k1 = 1;
                     if time >= EVdata(1, ev)
@@ -110,7 +123,7 @@ for day = 1 : DAY
         else
             tmp_P = zeros(EV, 1);
             parfor ev = 1: EV
-                if time >= EVdata(1, ev) || time < EVdata(2,ev)
+                if isUserAtHome(ev)
                     power_EV = min(PN, (EVdata_alpha(ev) * EVdata_capacity(ev) + (1 - EVdata_alpha(ev)) * EVdata_mile(ev) - tmp_E(ev))/ T);
                     tmp_P(ev) = power_EV;
                 end
@@ -127,15 +140,17 @@ for day = 1 : DAY
             tmp_T = abs(IVAdata_Ta(:, t_index));
             parfor iva = 1 : IVA
                 tcl = iva + FFA;
-                 % 按跟踪目标温度投标
-                [Pmax, Pmin, Pset, ~] = IVABidPara(IVAmpcPriceRecord', tmp_T(iva), ToutRecord, ...
-                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), IVAdata_Pmin(1, iva), ...
-                    p1, p2, q1, q2, T, ratioIVA);
-                IVAmaxPowerRecord(iva) = Pmax;
-                IVAsetPowerRecord(iva) = Pset;
-                IVAminPowerRecord(iva) = Pmin;
-                if isTCLflex == 1
-                    bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);          
+                if isIVAon(iva)
+                     % 按跟踪目标温度投标
+                    [Pmax, Pmin, Pset] = IVABidPara(IVAmpcPriceRecord', tmp_T(iva), ToutRecord, ...
+                        TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), IVAdata_Pmin(1, iva), ...
+                        p1, p2, q1, q2, T, ratioIVA);
+                    IVAmaxPowerRecord(iva) = Pmax;
+                    IVAsetPowerRecord(iva) = Pset;
+                    IVAminPowerRecord(iva) = Pmin;
+                    if isTCLflex == 1
+                        bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);          
+                    end
                 end
             end
             if mod(t_index, I_tcl) == 1
@@ -148,13 +163,15 @@ for day = 1 : DAY
                 end
                 tmp_Ta = abs(TCLdata_Ta(:, t_index ));
                 parfor tcl = 1 : FFA
-                    [Pmax, Pmin, Pset, ~] = FFABidPara(TCLmpcPriceRecord',tmp_Ta(tcl), ToutRecord, ...
-                            TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl),...
-                            T_tcl, ratioFFA);
-                    TCLmaxPowerRecord(tcl) = Pmax;
-                    TCLsetPowerRecord(tcl) = Pset;
-                    TCLminPowerRecord(tcl) = Pmin;
-                    bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
+                    if isFFAon(tcl)
+                        [Pmax, Pmin, Pset] = FFABidPara(TCLmpcPriceRecord',tmp_Ta(tcl), ToutRecord, ...
+                                TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl),...
+                                T_tcl, ratioFFA);
+                        TCLmaxPowerRecord(tcl) = Pmax;
+                        TCLsetPowerRecord(tcl) = Pset;
+                        TCLminPowerRecord(tcl) = Pmin;
+                        bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pset, EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
+                    end
                 end
             end
             if isTCLflex == 2
@@ -181,10 +198,10 @@ for day = 1 : DAY
         if isEVflex == 1
             tmp_P = zeros(EV, 1);
             parfor ev = 1 : EV
-                if time >= EVdata(1,ev) || time < EVdata(2, ev)  % 接入充电
+                if isUserAtHome(ev)
                     bidCurve = EVbid(mkt, EVmaxPowerRecord(ev), EVminPowerRecord(ev), EVavgPowerRecord(ev),...
                             EVdata_beta(ev), gridPrice, sigma);
-                    power_EV = handlePriceUpdate(bidCurve, clcPrice, mkt );
+                    power_EV = handlePriceUpdate(bidCurve, clcPrice, mkt);
                     tmp_P(ev, 1) = power_EV;
                     totalPowerEV = totalPowerEV + power_EV;
                     tmp_E_next(ev) = tmp_E(ev) + power_EV * T;
@@ -207,11 +224,13 @@ for day = 1 : DAY
             if mod(t_index, I_tcl) == 1
                 if isTCLflex == 1
                     parfor tcl = 1 : FFA
-                        bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl), TCLminPowerRecord(tcl), TCLsetPowerRecord(tcl),...
-                                EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
-                        power_TCL = handlePriceUpdate(bidCurve, clcPrice, mkt );
-                        TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
-                        totalPowerFFA = totalPowerFFA + power_TCL;
+                        if isFFAon(tcl)
+                            bidCurve = EVbid(mkt, TCLmaxPowerRecord(tcl), TCLminPowerRecord(tcl), TCLsetPowerRecord(tcl),...
+                                    EVdata_beta(mod(tcl - 1, EV) + 1), gridPrice, sigma);
+                            power_TCL = handlePriceUpdate(bidCurve, clcPrice, mkt );
+                            TCLpowerRecord(tcl, t_index_tcl) = power_TCL;
+                            totalPowerFFA = totalPowerFFA + power_TCL;
+                        end
                     end
                 end
  %                  if isEVflex == 1 && isAging == 1%还要记录实际跟踪情况
@@ -219,7 +238,7 @@ for day = 1 : DAY
  %                  else 
                     tmp_P = TCLpowerRecord(:, t_index_tcl);
                     for sub_i = 1 : T_tcl / T
-                        T0 = getTout(Tout, i + sub_i, 1);
+                        T0 = getTout(Tout, i + sub_i - 1, 1);
                         tmp_Ta = TCLdata_Ta(:, t_index + sub_i - 1 );
                         parfor tcl = 1: FFA
                             Ta = tmp_Ta(tcl);
@@ -233,17 +252,20 @@ for day = 1 : DAY
  %                  end
             end
         end
+        
         TCL_totalpowerRecord(t_index) = totalPowerFFA;
         
         %IVA
         if isTCLflex ~= 0
             if isTCLflex == 1
                 parfor iva = 1 : IVA
+                    if isIVAon(iva)
                     bidCurve = EVbid(mkt, IVAmaxPowerRecord(iva), IVAminPowerRecord(iva), IVAsetPowerRecord(iva),...
                             EVdata_beta(mod( iva + FFA - 1, EV) + 1), gridPrice, sigma);
                     power_IVA = handlePriceUpdate(bidCurve, clcPrice, mkt );
                     IVApowerRecord(iva, t_index) = power_IVA;
                     totalPowerIVA = totalPowerIVA + power_IVA;
+                    end
                 end
             end
             tmp_P = IVApowerRecord(:, t_index);

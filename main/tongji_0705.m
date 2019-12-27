@@ -3,7 +3,7 @@ clc;clear;
 close all;
 addPath;
 load('../../data/COLOR');
-macPath = '../../data/1127';
+macPath = '../../data/1219-1';
 load([macPath, '/TEC']);
 
 global totalCostRecord relativeAgingRecord lfRecord
@@ -27,7 +27,7 @@ Hbar1(1).FaceColor = [0.8, 0.8, 0.8];
 Hbar1(1).EdgeColor = Hbar1(1).FaceColor;
 Ht1 = plot(t, 100 * loadPowerRecord / LOAD);
 set(Ht1, 'color', [0, 173, 52 ]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-H1 = plot(t, 100 * windPowerRecord / WIND);
+H1 = plot(t, 100 * windPowerRecord / LOAD);
 set(H1, 'color', [0, 93, 186]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
 ylabel('p.u.(%)')
 yyaxis right
@@ -71,39 +71,79 @@ drawAging(macPath, 'DL_record', t3, 'relative aing rate', 'relative aging', 2, f
 
 %----------------------------------------------------------------------
 %温度曲线
-% figure;
-% DAY = 1;
-% t4 =  0 : T : DAY * 24;
-% color = ones(FFA + IVA, 3);
-% color(:, 2:3) = repmat(0.3 + EVdata_beta /4, 2, 2)';
-% 
-% colorBlue =  ones(FFA + IVA, 3);
-% colorBlue(:, 1:2) = repmat(0.3 + EVdata_beta/4, 2, 2)';
 
-% subplot(3,2,1); hold on;
-% for i = 1 : FFA
-%     plot(0: T: 24, 100 * (TCLdata_Ta(i ,I_day: I_day*2) - TCLdata_T(2, i)) / (TCLdata_T(1, i) - TCLdata_T(2, i)), 'color', color(i, :)); alpha(0.5);    
-% end
-% xlim([0, 24]);
-% xticks(0 : 6 : 24);
-% ylim([60, 110])
-% xticklabels({ '0:00', '6:00', '12:00', '18:00', '24:00'});
-% ylabel('FFA SOA')
-% 
-% subplot(3,2,3); hold on;
-% for i = 1 : IVA
-%     plot(0: T: 24, 100 * (IVAdata_Ta(i ,I_day: I_day*2) - TCLdata_T(2, i + FFA)) / (TCLdata_T(1, i + FFA) - TCLdata_T(2, i + FFA)), 'color', color(i + FFA - EV, :)); alpha(0.5);    
-% end
-% xlim([0, 24]);
-% xticks(0 : 6 : 24);
-% ylim([50, 105])
-% xticklabels({ '0:00', '6:00', '12:00', '18:00', '24:00'});
-% ylabel('IVA SOA')
-% 
+figure;
+DAY = 1;
+t4 =  0 : T : DAY * 24;
+color = ones(FFA + IVA, 3);
+color(:, 2:3) = repmat(0.3 + EVdata_beta /4, 2, 2)';
+
+colorBlue =  ones(FFA + IVA, 3);
+colorBlue(:, 1:2) = repmat(0.3 + EVdata_beta/4, 2, 2)';
+
+subplot(2,2,1); hold on;
+FFAdata = repmat(EVdata, 1, 2);
+for i = 1 : FFA
+%     if i > EV
+%         plot(12: T: 36, 100 * (TCLdata_Ta(i ,I_day + 48: I_day*2 + 48) - TCLdata_T(2, i)) / (TCLdata_T(1, i) - TCLdata_T(2, i)), 'color', color(i, :)); alpha(0.5);    
+%     else
+        ta = FFAdata(1, i);
+        td = FFAdata(2, i);
+        x1 = ceil(ta/T) * T + T: T: td + 24;
+        y1 = (TCLdata_Ta(i ,I_day + 1 + ceil(ta/T): 2 * I_day + floor(td/T))- TCLdata_T(2, i)) / (TCLdata_T(1, i) - TCLdata_T(2, i));
+        plot(x1, 100 * y1 , 'color', color(i, :)); alpha(0.5);
+%     end
+end
+xlim([12, 36]);
+xticks(12 : 6 : 36);
+xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
+ylabel('FFA SOA')
+ylim([60, 110])
+
+
+subplot(2,2,2); hold on;
+for i = 1 : FFA
+%     if i > EV
+%         plot(12: 36, TCLpowerRecord(i, 36:60), 'color', colorBlue(i, :)); alpha(0.5);    
+%     else
+        ta = FFAdata(1, i);
+        td = FFAdata(2, i) + 24;
+        x1 = ceil(ta) + 1: td;
+        y1 = TCLpowerRecord(i ,24 + ceil(ta) + 1: 24 + td);
+        plot(x1, y1, 'color', colorBlue(i, :)); alpha(0.5);
+%     end
+end
+xlim([12, 36]);
+xticks(12 : 6 : 36);
+xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
+ylabel('FFA power')
+ylim([min(min(TCLpowerRecord(:,24 + 1: 24*2)))*0.9, max(max(TCLpowerRecord(: ,24 + 1: 24*2)))*1.1])
+
+subplot(2,2,3); hold on;
+for i = 1 : IVA
+    plot(12: T: 36, 100 * (IVAdata_Ta(i ,I_day + 48: I_day*2 + 48) - TCLdata_T(2, i + FFA)) / (TCLdata_T(1, i + FFA) - TCLdata_T(2, i + FFA)), 'color', color(i + FFA - EV, :)); alpha(0.5);    
+end
+xlim([12, 36]);
+xticks(12 : 6 : 36);
+xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
+ylim([50, 105])
+ylabel('IVA SOA')
+
+
+subplot(2,2,4); hold on;
+for i = 1 : IVA
+    plot(12: T: 36, IVApowerRecord(i, I_day + 48: I_day * 2 + 48), 'color', colorBlue(i + FFA - EV, :)); alpha(0.5);    
+end
+xlim([12, 36]);
+xticks(12 : 6 : 36);
+xticklabels({ '12:00', '18:00', '24:00', '6:00', '12:00'});
+ylim([min(min(IVApowerRecord(:,24 + 1: 24*2)))*0.9, max(max(IVApowerRecord(: ,24 + 1: 24*2)))*1.1])
+ylabel('IVA power')
+
 % % EV电量和接入即充电比较
 % subplot(3,2,5); hold on;
 % EVdata_Eaging = EVdata_E;
-% load([macPath, '/mode'], 'EVdata_E'); 
+% load([macPath, '/TEC'], 'EVdata_E'); 
 % for ev = 1 : EV
 %     actuE = EVdata_Eaging(ev,  I_day + 49: I_day * 2 + 48);
 %     refE =  actuE./EVdata_E(ev,  I_day + 49: I_day * 2 + 48);
@@ -121,27 +161,6 @@ drawAging(macPath, 'DL_record', t3, 'relative aing rate', 'relative aging', 2, f
 % xlabel('t(h)')
 % ylabel('EV SOA')
 
-
-% subplot(3,2,2); hold on;
-% for i = 1 : FFA
-%     plot(1: 24, TCLpowerRecord(i ,24 + 1: 24*2), 'color', colorBlue(i, :)); alpha(0.5);    
-% end
-% xlim([0, 24]);
-% xticks(0 : 6 : 24);
-% ylim([min(min(TCLpowerRecord(:,24 + 1: 24*2)))*0.9, max(max(TCLpowerRecord(: ,24 + 1: 24*2)))*1.1])
-% xticklabels({ '0:00', '6:00', '12:00', '18:00', '24:00'});
-% ylabel('FFA power')
-% 
-% subplot(3,2,4); hold on;
-% for i = 1 : IVA
-%     plot(T: T: 24, IVApowerRecord(i, I_day + 1: I_day * 2), 'color', colorBlue(i + FFA - EV, :)); alpha(0.5);    
-% end
-% xlim([0, 24]);
-% xticks(0 : 6 : 24);
-% ylim([min(min(IVApowerRecord(:,24 + 1: 24*2)))*0.9, max(max(IVApowerRecord(: ,24 + 1: 24*2)))*1.1])
-% xticklabels({ '0:00', '6:00', '12:00', '18:00', '24:00'});
-% ylabel('IVA power')
-% 
 % subplot(3,2,6); hold on;
 % for ev = 1 : EV
 %     plot(T: T: 24, EVpowerRecord(ev,  I_day + 1 + 48: I_day * 2 + 48), 'color', colorBlue(ev, :)); alpha(0.5);
@@ -152,3 +171,4 @@ drawAging(macPath, 'DL_record', t3, 'relative aing rate', 'relative aging', 2, f
 % set(gcf,'unit','normalized','position',[0,0,0.3,0.2]);
 % ylabel('EV power')
 % xlabel('t(h)')
+set(gcf,'unit','normalized','position',[0,0,0.3,0.25]);

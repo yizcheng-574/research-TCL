@@ -1,5 +1,6 @@
 isAging = 0;
 TransformerInit;
+isUserAtHome = zeros(EV, 1);
 
 tielineRecord = zeros(1,I);%自联络线购电量
 gridPriceRecord4 = zeros(1,I);
@@ -42,8 +43,17 @@ for day = 1 : DAY
             if time >= EVdata(2, ev) && time - T < EVdata(2, ev) %刚离开
                 EVdata_E(ev, t_index) = max(EVdata_E(ev, t_index) - EVdata_mile(ev), 0);
             end
+            if time >= EVdata(1, ev) || time < EVdata(2,ev)
+                isUserAtHome(ev) = 1;
+            else
+                isUserAtHome(ev) = 0;
+            end
         end
-        
+        isTCLon = repmat(isUserAtHome, 2, 1);
+        isFFAon = isTCLon(1:FFA, :);
+        isIVAon = ones(IVA, 1);
+%         isIVAon = isTCLon(FFA + 1:end, :);
+
         tmp_P =  EVpowerRecord(:, t_index);
         tmp_E_next = zeros(EV, 1);
         tmp_E = EVdata_E(:, t_index);
@@ -61,10 +71,12 @@ for day = 1 : DAY
         parfor iva = 1 : IVA
             tcl = iva + FFA;
             %按跟踪目标温度投标
-            [~, ~, Pset, ~] = IVABidPara(IVAmpcPriceRecord', tmp_T(iva), ToutRecord, ...
-                TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), IVAdata_Pmin(1, iva), ...
-                p1, p2, q1, q2, T, ratioIVA);
-            tmp_P(iva) = Pset;
+            if isIVAon(iva)
+                [~, ~, Pset] = IVABidPara(IVAmpcPriceRecord', tmp_T(iva), ToutRecord, ...
+                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl), IVAdata_Pmin(1, iva), ...
+                    p1, p2, q1, q2, T, ratioIVA);
+                tmp_P(iva) = Pset;
+            end
         end
         IVApowerRecord(:, t_index) = tmp_P;
         tmp_Ta = IVAdata_Ta(:, t_index);
@@ -86,10 +98,12 @@ for day = 1 : DAY
             tmp_Ta = TCLdata_Ta(1: FFA, t_index);
             tmp_P = zeros(FFA, 1);
             parfor tcl = 1 : FFA
-                [~, ~, Pset, ~] = FFABidPara(TCLmpcPriceRecord',tmp_Ta(tcl), ToutRecord, ...
-                    TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl),...
-                    T_tcl, ratioFFA);
-                tmp_P(tcl) = Pset;
+                if isFFAon(tcl)
+                    [~, ~, Pset] = FFABidPara(TCLmpcPriceRecord',tmp_Ta(tcl), ToutRecord, ...
+                        TCLdata_T(1, tcl), TCLdata_T(2, tcl), TCLdata_R(1, tcl), TCLdata_C(1, tcl), TCLdata_PN(1, tcl),...
+                        T_tcl, ratioFFA);
+                    tmp_P(tcl) = Pset;
+                end
             end
             TCLpowerRecord(:, t_index_tcl) = tmp_P;
             totalPowerFFA = sum(tmp_P);

@@ -21,12 +21,23 @@ end
 penaltyFFA = zeros(1, IVA + FFA);
 denominator = 2.7 * TCLdata_R .* (1 - exp( - T_tcl ./ TCLdata_R ./ TCLdata_C));
 a = (TCLdata_T(1,:) - TCLdata_T(2,:)) ./ denominator;
-for ffa = 1 :FFA
-    penaltyFFA(ffa) = sum((TCLdata_Ta_normalize(ffa,2:end) - 0.5).^2 .* gridPriceRecord4 * a(ffa) * ratioFFA);
-end
-for iva = 1: IVA
-    tcl = iva + FFA;
-    penaltyFFA(tcl) =sum((TCLdata_Ta_normalize(tcl,2:end) - 0.5).^2 .* gridPriceRecord4 * (TCLdata_PN(1, tcl)-IVAdata_Pmin(1, iva)) * ratioIVA);
+
+TCLon = repmat(EVdata,1,2);
+for tcl = 1 :FFA + IVA
+    isTCLon = zeros(1, I_day);
+    for i = 1 : I_day
+        time = (i - 1) * T ;
+        if time > (TCLon(1, tcl) + 1)|| time < TCLon(2,tcl)
+            isTCLon(i) = 1;
+        else
+            isTCLon(i) = 0;
+        end
+    end
+    if tcl <= FFA
+        penaltyFFA(tcl) = sum(repmat(isTCLon, 1, DAY) .*(TCLdata_Ta_normalize(tcl,2:end) - 0.5).^2 .* gridPriceRecord4 * a(tcl) * ratioFFA);
+    else
+        penaltyFFA(tcl) = sum(repmat(isTCLon, 1, DAY) .*(TCLdata_Ta_normalize(tcl,2:end) - 0.5).^2 .* gridPriceRecord4 * (TCLdata_PN(1, tcl)-IVAdata_Pmin(1, tcl-FFA)) * ratioIVA);
+    end
 end
 %计算配网成本
 DSO_cost(1) = sum(DL_record) * install_cost / expectancy;%变压器老化成本

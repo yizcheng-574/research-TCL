@@ -13,6 +13,23 @@ for ev = 1 : EV
         EVdata(2,ev) = normrnd(TD_avg, TD_sigma);
     end
 end
+
+% TA_avg_weekend = 21.82;
+% TA_sigma_weekend = 3;
+% TD_avg_weekend = 10.56;
+% TD_sigma_weekend = 3;%周末
+% EVdata_weekend = zeros(2, EV);
+% EVdata_weekend(1,:) = normrnd(TA_avg_weekend, TA_sigma_weekend, 1, EV);
+% EVdata_weekend(2,:) = normrnd(TD_avg_weekend, TD_sigma_weekend, 1, EV);
+% EVdata_weekend(EVdata_weekend < 0) = 0;
+% EVdata_weekend(EVdata_weekend > 24) = 24;
+% for ev = 1 : EV
+%     while EVdata_weekend(2,ev) + 24 < EVdata_weekend(1,ev) + 1
+%         EVdata_weekend(2,ev) = normrnd(TD_avg_weekend, TD_sigma_weekend);
+%     end
+% end
+
+
 EVdata_mile = unifrnd(10,20,1,EV);
 EVdata_capacity = ceil(unifrnd(20,25,1,EV));%表示EV电池老化
 for ev = 1 : EV

@@ -11,7 +11,7 @@ Hbar2.FaceColor = 'none';
 if (index ==2)
     ylabel('price(yuan/kWh)');
 end
-% ylim([min(gridPriceRecord4) * 0.9, mkt_max]);
+ylim([mkt_min, mkt_max]);
 if (index == 1)
     le = legend([Hbar2, Hbar1], 'utility price', 'clearing price', 'Orientation','horizontal');
     set(le ,'Box', 'off');

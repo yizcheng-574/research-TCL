@@ -30,7 +30,7 @@ end
 % end
 
 
-EVdata_mile = unifrnd(10,20,1,EV);
+EVdata_mile = unifrnd(5,20,1,EV);
 EVdata_capacity = ceil(unifrnd(20,25,1,EV));%表示EV电池老化
 for ev = 1 : EV
     if EVdata_mile(ev) > EVdata_capacity(ev) - 1

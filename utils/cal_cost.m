@@ -40,7 +40,7 @@ for tcl = 1 :FFA + IVA
     end
 end
 %计算配网成本
-DSO_cost(1) = sum(DL_record) * install_cost / expectancy;%变压器老化成本
+DSO_cost(1) = sum(DL_record) * install_cost / expectancy * Tmin;%变压器老化成本
 DSO_cost(2) = tielineRecord * gridPriceRecord4' * T; %配网总用电成本
 DSO_cost(3) = sum(penaltyFFA) * T;
 %各TCL实际成本和优化所得成本

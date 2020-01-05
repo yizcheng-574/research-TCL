@@ -68,7 +68,7 @@ classdef distributionTrans < transformer
         end
         
         function bidCurve = bid(obj, t_index, time)
-            global T T_mpc  I T_tcl I_tcl
+            global T T_mpc  I T_tcl I_tcl ratioFFA ratioIVA
 
             step = obj.mkt(3);
             obj.gridPrice = obj.gridPriceRecord(t_index);
@@ -133,9 +133,9 @@ classdef distributionTrans < transformer
             parfor iva = 1 : objIVA
                 tcl = iva + objFFA;
                 %按跟踪目标温度投标
-                [Pmax, Pmin, Pset, ~] = IVABidPara(IVAmpcPriceRecord', tmp_T(iva), ToutRecord, ...
+                [Pmax, Pmin, Pset] = IVABidPara(IVAmpcPriceRecord', tmp_T(iva), ToutRecord, ...
                     objTCLdata_T(1, tcl), objTCLdata_T(2, tcl), objTCLdata_R(1, tcl), objTCLdata_C(1, tcl), objTCLdata_PN(1, tcl), objIVAdata_Pmin(1, iva), ...
-                    objp1, objp2, objq1, objq2, objT);
+                    objp1, objp2, objq1, objq2, objT, ratioIVA);
                 objTCLmaxPowerRecord(1, iva + objFFA) = Pmax;
                 objTCLminPowerRecord(1, iva + objFFA) = Pmin;
                 objTCLsetPowerRecord(1, iva + objFFA) = Pset;
@@ -153,9 +153,9 @@ classdef distributionTrans < transformer
                 end
                 tmp_Ta = obj.TCLdata_Ta(:, t_index );
                 parfor tcl = 1 : obj.FFA
-                    [Pmax, Pmin, Pset, ~] = FFABidPara(TCLmpcPriceRecord',tmp_Ta(tcl), ToutRecord, ...
+                    [Pmax, Pmin, Pset] = FFABidPara(TCLmpcPriceRecord',tmp_Ta(tcl), ToutRecord, ...
                             objTCLdata_T(1, tcl), objTCLdata_T(2, tcl), objTCLdata_R(1, tcl), objTCLdata_C(1, tcl), objTCLdata_PN(1, tcl),...
-                            T_tcl);
+                            T_tcl, ratioFFA);
                     objTCLmaxPowerRecord(tcl) = Pmax;
                     objTCLsetPowerRecord(tcl) = Pset;
                     objTCLminPowerRecord(tcl) = Pmin;

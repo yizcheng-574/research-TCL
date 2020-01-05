@@ -3,7 +3,7 @@ function Parray = EVopt( T, E, alpha, E_min, E_max, PN, prePrice ) %tÎªÊ£ÓàÊ±¼ä
 E_avg = alpha * E_max + (1 - alpha) * E_min;
 delta_E = max(0, E_avg - E);
 len = length(prePrice);
-if len * PN * T < E_min
+if len * PN * T < delta_E
     Parray = PN * ones(len, 1);
 else
     f = prePrice;

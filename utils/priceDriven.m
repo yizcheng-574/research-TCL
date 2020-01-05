@@ -43,16 +43,9 @@ for day = 1 : DAY
             if time >= EVdata(2, ev) && time - T < EVdata(2, ev) %¸ÕÀë¿ª
                 EVdata_E(ev, t_index) = max(EVdata_E(ev, t_index) - EVdata_mile(ev), 0);
             end
-            if time >= EVdata(1, ev) || time < EVdata(2,ev)
-                isUserAtHome(ev) = 1;
-            else
-                isUserAtHome(ev) = 0;
-            end
         end
-        isTCLon = repmat(isUserAtHome, 2, 1);
-        isFFAon = isTCLon(1:FFA, :);
-        isIVAon = ones(IVA, 1);
-%         isIVAon = isTCLon(FFA + 1:end, :);
+        
+        updateACLon_offstate;
 
         tmp_P =  EVpowerRecord(:, t_index);
         tmp_E_next = zeros(EV, 1);

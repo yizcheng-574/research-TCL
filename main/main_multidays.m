@@ -82,24 +82,15 @@ for day = 1 : DAY
         
         totalPowerEV = 0;
         tmp_E = abs(EVdata_E(:, t_index));
-        
-        
+           
         parfor ev = 1 : EV
             if time >= EVdata(2, ev) && time - T < EVdata(2, ev)
                 tmp_E(ev) = max(tmp_E(ev) - EVdata_mile(ev), 0);
             end
-            if time >= EVdata(1, ev) || time < EVdata(2,ev)
-                isUserAtHome(ev) = 1;
-            else
-                isUserAtHome(ev) = 0;
-            end
         end
-
-        isTCLon = repmat(isUserAtHome, 2, 1);
-        isFFAon = isTCLon(1:FFA, :);
-        isIVAon = ones(IVA, 1);
-%         isIVAon = isTCLon(FFA + 1:end, :);
-
+        
+        updateACLon_offstate;
+        
         if isEVflex == 1 
             parfor ev = 1 : EV
                 if isUserAtHome(ev)

@@ -38,8 +38,7 @@ if maxIndex > 1
 else
     maxIndex = length(K);
 end
-DL = exp((15000 / (100 + 273) - 15000 ./ (theta_h + 273))) * Tmin; % 110 for thermally updated paper
-% DL = 2 .^ ((theta_h -98) / 6) * Tmin; % 98 for non-thermally updated paper,
+DL = exp((15000 / (100 + 273) - 15000 ./ (theta_h + 273))); % 110 for thermally updated paper
 if isBid == 1
     P_rated = tielineBuy;%kW
     dC_dL = install_cost / expectancy;
@@ -49,7 +48,7 @@ if isBid == 1
         (1 - exp(- Tmin / (eta_o / k22))) * d_theta_hr * (k21 - 1 ) * y .* K .^ (y - 1) + ... %d_theta_h2
        (1 - exp(- Tmin / (eta_o * k11))) * d_theta_or * x .* KR .^ (x - 1) * 2 .* K * R / (1 + R); %theta_o
     dK_dP = 1 / P_rated;
-    dC_dP = 1 / T * dC_dL .* dL_dtheta_h .* dtheta_h_dK .* dK_dP;
+    dC_dP = 60 * dC_dL .* dL_dtheta_h .* dtheta_h_dK .* dK_dP;
     
     tielineCurve = zeros(1, step + 1);
     k_index = 1;

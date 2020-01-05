@@ -1,10 +1,10 @@
 addPath;warning('off');
 startmatlabpool();
 clc; clear;
-path = '..\..\data\1127';
+path = '..\..\data\1227-2';
 dataPath = [path, '\data'];
 DAY = 7;
-RATIO = 100;
+RATIO = 100; 
 EV = 5 * RATIO; % EV总数，额定功率为3.7kW
 FFA = 6 * RATIO; % 空调总数
 IVA = 4 * RATIO;
@@ -17,7 +17,7 @@ I = 24 * DAY / T;
 I_day = 24 / T;
 I_tcl = T_tcl / T;
 I2 = 24 * DAY / T_tcl;
-LOAD = 15 * RATIO; % LOAD最大负荷（kW）
+LOAD = 18 * RATIO; % LOAD最大负荷（kW）
 WIND = 10 * RATIO; % WIND风电装机容量（kW）
 tielineSold = 10 * RATIO;
 tielineBuy = 31.5 * RATIO;
@@ -30,13 +30,15 @@ if exist('DAY', 'var') == 1
 else
     isMultiDay = 0;
 end
-% mktInit;
-% priceInit;
-% EVinit;
-% TCLinit;
-% maxEV = EV;
-% clear EV
-% save(dataPath);
+willFFAclose = 0;
+willIVAclose = 1;
+mktInit;
+priceInit;
+EVinit;
+TCLinit;
+maxEV = EV;
+clear EV
+save(dataPath);
 modeType = [
     1, 1, 1; % Case I - TEC
     1, 1, 0; % Case II - TEC w/o ACLs  
@@ -45,7 +47,7 @@ modeType = [
 ];
 for penetration = 10
     % TC方案，对EV、TCL进行优化结果比较
-    for mode = 1: 4
+    for mode = 1:4
         clearvars -except modeType mode dataPath penetration EV
         load(dataPath);
         EV = 5 * RATIO * penetration / 10;

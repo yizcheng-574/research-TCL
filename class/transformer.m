@@ -73,7 +73,7 @@ classdef transformer < handle
 
             d_theta_h = tmp_d_theta_h1 - tmp_d_theta_h2;
             tmp_theta_h = tmp_theta_o + d_theta_h;
-            DL = 2 .^ ((tmp_theta_h - 98) / 6) * Tmin;%98 for non-thermally updated paper,          
+            DL = 2 .^ ((tmp_theta_h - 98) / 6);%98 for non-thermally updated paper,          
         end
         
         function dC_dP = getDerivative(obj, K, t_index)
@@ -85,7 +85,7 @@ classdef transformer < handle
                 (1 - exp(- Tmin / (obj.eta_o / obj.k22))) * obj.d_theta_hr * (obj.k21 - 1 ) * obj.y .* K .^ (obj.y - 1) + ... %d_theta_h2
                 (1 - exp(- Tmin / (obj.eta_o * obj.k11))) * obj.d_theta_or * obj.x .* KR .^ (obj.x - 1) * 2 .* K * obj.R / (1 + obj.R); %theta_o
             dK_dP = 1 / obj.CAPACITY;
-            dC_dP = 1 / T * dC_dL .* dL_dtheta_h .* dtheta_h_dK .* dK_dP;
+            dC_dP = 60 * dC_dL .* dL_dtheta_h .* dtheta_h_dK .* dK_dP;
         end
         
         function transUpdate(obj, t_index)
@@ -108,7 +108,7 @@ classdef transformer < handle
         function calculateCost(obj)
             global T;
             obj.cost(1) = T * obj.tielineRecord * obj.gridPriceRecord';
-            obj.cost(2) = sum(obj.DL_record) * obj.install_cost / obj.expectancy;%变压器老化成本
+            obj.cost(2) = sum(obj.DL_record) * obj.install_cost / obj.expectancy * 15;%变压器老化成本
         end
 
     end

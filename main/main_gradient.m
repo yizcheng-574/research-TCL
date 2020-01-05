@@ -1,13 +1,14 @@
 % 单层\单次出清TC和次梯度法比较
 clc; clear;
 addPath;
-global I
+global I ratioIVA ratioFFA
 constantInit;
 isMultiDay = 0;
 isHierarchical = 1;
 isGradient = 1;
 isAdmm = 1; %% TODO
-
+ratioFFA = 0.7;
+ratioIVA = 2;
 RATIO = 10;
 EV = 5 * RATIO;
 FFA = 0 * RATIO;
@@ -15,6 +16,7 @@ IVA = 10 * RATIO;
 LOAD = 20 * RATIO;
 WIND = 10 * RATIO;
 CAPACITY = 35 * RATIO;
+
 
 [EVdata, EVdata_mile, EVdata_capacity, PN, TCLdata_T, TCLdata_C, TCLdata_R, FFAdata_PN, IVAdata_PN, TCLdata_Pmin, TCLdata_initT ] = TCLEVinit (19.82, 1.92, 8.56 + 24, 2, EV, IVA, FFA);
 

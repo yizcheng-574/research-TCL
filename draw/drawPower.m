@@ -2,10 +2,10 @@ function [] = drawPower(path, titleName, t, c1, c2, c3, c4, Linestyle, index, is
 global totalCostRecord relativeAgingRecord lfRecord isEn
 theta_h_record = 1;
 load(path, ...
-    'tielineRecord', 'EV_totalpowerRecord', 'TCL_totalpowerRecord', 'IVA_totalpowerRecord',...
+    'tielineRecord', 'EV_totalpowerRecord', 'TCL_totalpowerRecord', 'IVA_totalpowerRecord', 'EV_totalavgPowerRecord',...
     'DSO_cost', 'tielineBuy', 'DL_record', ...
     'DAY', 'T', 'I',...
-    'gridPriceRecord','gridPriceRecord4');
+    'gridPriceRecord','gridPriceRecord4', 'priceRecord');
 
 if isOneday > 0
     st = isOneday * 96 + 1;
@@ -17,11 +17,11 @@ end
 t = t(st:en);
 figure;
 yyaxis left;
-t0 = 1: 24 * 7;
-Hprice = bar(t0((st-1)/4: en/4), gridPriceRecord((st-1)/4: en/4));
-Hprice.EdgeColor = 'none';
-Hprice.FaceColor = [0.8, 0.8, 0.8];
-ylim([0.55, 1.25])
+Hprice = bar(t, [gridPriceRecord4(st: en); priceRecord(st:en)-gridPriceRecord4(st: en)]', 'stacked');
+Hprice(1).EdgeColor = 'none';
+Hprice(1).FaceColor = [0.8, 0.8, 0.8];
+Hprice(2).EdgeColor = 'none';
+Hprice(2).FaceColor = [1, 0, 0];
 ylabel('主网电价(元/kWh)')
 yyaxis right;
 hold on;
@@ -32,9 +32,13 @@ tielineRecord * gridPriceRecord4(st:en)' * T
 EV_totalpowerRecord = EV_totalpowerRecord(st: en);
 TCL_totalpowerRecord = TCL_totalpowerRecord(st: en);
 IVA_totalpowerRecord = IVA_totalpowerRecord(st: en);
+
+EV_totalavgPowerRecord = EV_totalavgPowerRecord(st: en);
+
 maxY = max(tielineRecord)/1000 * 1.05;
 Ht = stairs(t, tielineRecord / 1000, 'color', c1, 'LineWidth', 1.5, 'LineStyle', Linestyle, 'marker', 'none');
 Hev = stairs(t, EV_totalpowerRecord(1:length(t)) / 1000, 'color', c3, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'd', 'MarkerSize', 3 );
+Hev_avg = stairs(t, EV_totalavgPowerRecord / 1000, 'color', c3, 'LineWidth', 2, 'LineStyle', ':', 'marker', 'o', 'MarkerSize', 3);
 Htcl = stairs(t, (TCL_totalpowerRecord + IVA_totalpowerRecord) / 1000, 'color', c3, 'LineWidth', 1.5,'LineStyle', '--', 'marker', 'none');
 limit1 = plot(t, tielineBuy / 1000 * ones(1, length(t)), 'color', c4, 'LineWidth' , 1, 'LineStyle', '--', 'DisplayName', '功率上限', 'marker', 'none');
 limit2 = plot(t, tielineBuy * 1.15 / 1000 * ones(1, length(t)), 'color', c4, 'LineWidth' , 1, 'LineStyle', '-', 'DisplayName', '功率上限', 'marker', 'none');

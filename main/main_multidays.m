@@ -2,18 +2,19 @@
 tic;
 
 tielineRecord = zeros(1,I); % 自联络线购电量
-gridPriceRecord4 = zeros(1,I);
 if isTCLflex ~= 0 || isEVflex == 1
     priceRecord = zeros(1,I); % 考虑预测误差，随机优化的出清电价
     hasCongest = 0;
 end
+
+EV_totalavgPowerRecord = zeros(1, I);
 
 EV_totalpowerRecord = zeros(1, I); % EV总充电功率
 TCL_totalpowerRecord = zeros(1, I);
 IVA_totalpowerRecord = zeros(1, I);
 
 EVpowerRecord = zeros(EV, I);
-EVdata_E = zeros(maxEV, I);
+EVdata_E = zeros(EV, I);
 EVdata_E(:, 1) = EVdata_initE .* EVdata_capacity';
 totalPowerEV = 0;
 
@@ -49,11 +50,6 @@ else
 end
 TransformerInit;
 
-for t_index = 1: I
-    gridPrice = gridPriceRecord(floor((t_index - 1) * T) + 1);
-    gridPriceRecord4(t_index) = gridPrice;
-end
-
 for day = 1 : DAY
     for i = 1: I_day
         t_index = (day - 1) * I_day + i;
@@ -62,7 +58,7 @@ for day = 1 : DAY
         time_all = (t_index - 1) * T; % 总时长
         theta_a = Tout(i); % C %Tout
         gridPrice = gridPriceRecord4(t_index);
-        sigma = sigmaRecord(floor(time) + 1);
+        sigma = sigmaRecordOneDay(i);
         
         bidCurve = zeros(1, step + 1);
         % 联络线投标
@@ -91,6 +87,12 @@ for day = 1 : DAY
         
         updateACLon_offstate;
         
+        if isEVflex == 1
+            EVavgPowerRecord = zeros(EV, 1);
+            EVmaxPowerRecord = zeros(EV, 1);
+            EVminPowerRecord = zeros(EV, 1);
+        end
+
         if isEVflex == 1 
             parfor ev = 1 : EV
                 if isUserAtHome(ev)
@@ -111,6 +113,7 @@ for day = 1 : DAY
                     bidCurve = bidCurve + EVbid(mkt, Pmax, Pmin, Pavg, EVdata_beta(ev), gridPrice, sigma);
                 end
             end
+            EV_totalavgPowerRecord(t_index) = sum(EVavgPowerRecord);
         else
             tmp_P = zeros(EV, 1);
             parfor ev = 1: EV

@@ -1,4 +1,5 @@
 % 见main_EVTCL.m
+% 预测部分参考main_EVpenes.m
 tic;
 
 tielineRecord = zeros(1,I); % 自联络线购电量
@@ -50,6 +51,21 @@ else
 end
 TransformerInit;
 
+if isHeb == 1
+    congeMin = 0.4;
+    congeMax = mkt_max * 1.1;
+    congeList = congeMin: 0.05: congeMax;
+    m = length(congeList) - 1;
+    congeQujian = zeros(1, m);
+    for i = 1 : m
+        congeQujian(i) = (congeList(i) + congeList(i + 1)) / 2;
+    end
+%     W = -1 * ones(m, I_day);
+    load('../../data/heb_weight.mat');
+    prePriceRecord = zeros(1, I);
+end
+preConge = gridPriceOneDay;
+
 for day = 1 : DAY
     for i = 1: I_day
         t_index = (day - 1) * I_day + i;
@@ -57,7 +73,7 @@ for day = 1 : DAY
         time = (i - 1) * T ; % 当前时长（24小时制）
         time_all = (t_index - 1) * T; % 总时长
         theta_a = Tout(i); % C %Tout
-        gridPrice = gridPriceRecord4(t_index);
+        gridPrice = gridPriceOneDay(i);
         sigma = sigmaRecordOneDay(i);
         
         bidCurve = zeros(1, step + 1);
@@ -71,9 +87,10 @@ for day = 1 : DAY
                 if pCurve(q) < gridPrice
                     tielineCurve(q) = tielineSold;
                 elseif pCurve(q) >= gridPrice
-                    tielineCurve(q) = -tielineBuy;
+                    tielineCurve(q) = - tielineBuy;
                 end
             end
+            maxPower = tielineSold;
         end
         
         totalPowerEV = 0;
@@ -99,10 +116,10 @@ for day = 1 : DAY
                      % 预测未来电价
                     k1 = 1;
                     if time >= EVdata(1, ev)
-                        prePrice = getTout(gridPriceRecord4, t_index , day * I_day + floor(EVdata(2,ev) / T) - t_index);
+                        prePrice = getTout(repmat(preConge, 1, DAY), t_index , day * I_day + floor(EVdata(2,ev) / T) - t_index);
                         remain_t =  24 + EVdata(2,ev) - time;
                     else
-                        prePrice = getTout(gridPriceRecord4, t_index , (day - 1) * I_day + floor(EVdata(2,ev) / T) - t_index);
+                        prePrice = getTout(repmat(preConge, 1, DAY), t_index , (day - 1) * I_day + floor(EVdata(2,ev) / T) - t_index);
                         remain_t =  EVdata(2,ev) - time;
                     end
                     [Pmax, Pmin, Pavg] = EVBidPara(T, tmp_E(ev), EVdata_alpha(ev), remain_t, ...
@@ -129,7 +146,7 @@ for day = 1 : DAY
         if isTCLflex ~= 0
             totalPowerIVA = 0;
             N = T_mpc / T;
-            IVAmpcPriceRecord = getTout(gridPriceRecord4, t_index, N);     
+            IVAmpcPriceRecord = getTout(repmat(preConge, 1, DAY), t_index, N);     
             ToutRecord = getTout(Tout,i , N);
             tmp_T = abs(IVAdata_Ta(:, t_index));
             parfor iva = 1 : IVA
@@ -150,7 +167,8 @@ for day = 1 : DAY
             if mod(t_index, I_tcl) == 1
                 totalPowerFFA = 0;
                 N = T_mpc / T_tcl;
-                TCLmpcPriceRecord = getTout(gridPriceRecord, floor(t_index / (T_tcl / T)) + 1, N);
+                preCongePerh = mean(reshape(preConge, 4, 24));
+                TCLmpcPriceRecord = getTout(repmat(preCongePerh, 1, DAY), floor(t_index / (T_tcl / T)) + 1, N);
                 ToutRecord = zeros(N, 1);
                 for n = 1 : N
                     ToutRecord(n) = mean(getTout(Tout,i + (n - 1) * (T_tcl / T), T_tcl / T));
@@ -183,15 +201,27 @@ for day = 1 : DAY
         end
         if isTCLflex == 1 || isEVflex == 1
          % 出清
-            clcPrice = calculateIntersection(mkt, 0, bidCurve - windPowerRecord(t_index) + loadPowerRecord(t_index) + eta * tielineCurve + totalPowerFFA + totalPowerIVA + totalPowerEV);
+            % 找到市场价对应的功率，如果小于maxPower, 则直接出清价格为市场价
+            indexToGridPrice = (gridPrice - mkt_min)/ (mkt_max - mkt_min) * step + 1;
+            indexToGridPrice = floor(indexToGridPrice);
+            if bidCurve(indexToGridPrice) - windPowerRecord(t_index) + loadPowerRecord(t_index) + totalPowerFFA + totalPowerIVA + totalPowerEV <= maxPower * eta
+                clcPrice = gridPrice;
+            else
+                clcPrice = calculateIntersection(mkt, 0, bidCurve - windPowerRecord(t_index) + loadPowerRecord(t_index) + eta * tielineCurve + totalPowerFFA + totalPowerIVA + totalPowerEV);
+            end
             priceRecord(t_index) = clcPrice;
+
+            % 更新sigma数据
+            iPriceRecord = reshape(priceRecord, DAY, I_day);
+            iPriceRecord = iPriceRecord(1 : day, i);
+%             sigmaRecordOneDay(i) = sqrt(sum((iPriceRecord - mean(iPriceRecord)).^2) / day);
         end
          % 反聚合
          % EV
         tmp_E_next = zeros(EV, 1);
         if isEVflex == 1
             tmp_P = zeros(EV, 1);
-            parfor ev = 1 : EV
+            for ev = 1 : EV
                 if isUserAtHome(ev)
                     bidCurve = EVbid(mkt, EVmaxPowerRecord(ev), EVminPowerRecord(ev), EVavgPowerRecord(ev),...
                             EVdata_beta(ev), gridPrice, sigma);
@@ -249,7 +279,7 @@ for day = 1 : DAY
         
         TCL_totalpowerRecord(t_index) = totalPowerFFA;
         
-        %IVA
+        % IVA
         if isTCLflex ~= 0
             if isTCLflex == 1
                 parfor iva = 1 : IVA
@@ -273,7 +303,37 @@ for day = 1 : DAY
         IVA_totalpowerRecord(t_index) = totalPowerIVA;
         
         tmp = totalPowerEV + totalPowerFFA + totalPowerIVA;
-        tielineRecord(t_index) = (tmp - windPowerRecord(t_index) + loadPowerRecord(t_index))/eta;%正表示自主网购电，负表示向主网售电
+        tielineRecord(t_index) = (tmp - windPowerRecord(t_index) + loadPowerRecord(t_index))/eta; % 正表示自主网购电，负表示向主网售电
+
+        if isHeb == 1
+            % 调整Heb学习权重
+            y = W(:, i);
+            y = exp(y) / sum(exp(y));
+            a = zeros(m, 1);
+            x = clcPrice;
+            if x < congeList(1)
+                a(1) = 1;
+            elseif x > congeList(end)
+                a(end) = 1;
+            else
+                for tmp = 1 : m-1
+                    if x >= congeList(tmp) && x < congeList(tmp+1)
+                        break;
+                    end
+                end
+                a(tmp) = 1;
+                clear tmp
+            end
+            W(:, i) = W(:, i) + 1.5 * (a - y);
+            
+            % 根据heb学习预测,预测值为期望
+            y = W(:, i);
+            tmp = exp(y) ./ sum(exp(y));
+            preResult = sum(congeQujian' .* tmp);
+            preConge (i) = preResult;
+            prePriceRecord(t_index) = preResult;
+        end
+
         if isAging == 1
             isBid = 0;
             transformer_ageing_expo;

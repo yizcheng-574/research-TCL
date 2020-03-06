@@ -1,12 +1,20 @@
-figure;
-hold on;
+global howManyDays
+figure; hold on;
+if isOneday > 0
+    st = isOneday * 96 + 1;
+    en = st + 96 * howManyDays - 1;
+else
+    st = 49;
+    en = I;
+end
+
 yyaxis left
-Hbar1 = bar(t, 100 * gridPriceRecord4/ mkt_max); 
+Hbar1 = bar(t(st:en), 100 * gridPriceRecord4(st:en)/ mkt_max); 
 Hbar1(1).FaceColor = [0.8, 0.8, 0.8];
 Hbar1(1).EdgeColor = Hbar1(1).FaceColor;
-Ht1 = plot(t, 100 * loadPowerRecord / LOAD);
+Ht1 = plot(t(st:en), 100 * loadPowerRecord(st:en) / LOAD);
 set(Ht1, 'color', [0, 173, 52 ]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-H1 = plot(t, 100 * windPowerRecord / LOAD);
+H1 = plot(t(st:en), 100 * windPowerRecord(st:en) / LOAD);
 set(H1, 'color', [0, 93, 186]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
 if isEn == 1
     ylabel('p.u.(%)')
@@ -14,7 +22,8 @@ else
     ylabel('±κηΫΦµ(%)')
 end
 yyaxis right
-H3 = plot(t, repmat(Tout, 1, DAY));
+ToutToPlot = repmat(Tout, 1, howManyDays);
+H3 = plot(t(st:en), ToutToPlot);
 set(H3, 'color', tomato,'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
 if isEn == 1
     ylabel('temperature(^oC)')
@@ -25,9 +34,7 @@ else
 end
 set(le, 'Box', 'off')
 
-xlim([0, 24 * DAY]);
-xticks(0 : 12 : 24 * DAY);
-xticklabels({ '0', '12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5', '12:00', '6', '12:00', '7'});
+drawTimeAxis;
 
 if isEn == 1
     xlabel('t(day)');

@@ -5,9 +5,9 @@ clc;clear;
 close all;
 addPath;
 load('../../data/COLOR');
-macPath = '../../data/20200207';
+macPath = '../../data/20200305';
 load([macPath, '/TEC']);
-global totalCostRecord relativeAgingRecord lfRecord isEn
+global totalCostRecord relativeAgingRecord lfRecord isEn howManyDays
 totalCostRecord = zeros(1, 5);
 relativeAgingRecord = zeros(1, 5);
 lfRecord = zeros(1, 5);
@@ -20,17 +20,19 @@ t0 = 1 : DAY * 24;
 t3 = 0: T: DAY * 24;
 c1 = black; c2 = green; c3 = darkblue; c4 = tomato;
 
+isOneday = 3;
+howManyDays = 2;
+
 %基本仿真数据
 drawInfo;
 
 % ----------------------------------------------------------------------
 c5 = darkblue; c6 = tomato;
-drawPrice(macPath, '/TEC', t, c5, c6, 1)
-drawPrice(macPath, '/TEC_wo_ACLs', t, c5, c6, 2)
-drawPrice(macPath, '/TEC_wo_SOM', t, c5, c6, 3)
-xlabel('t(day)')
+% drawPrice(macPath, '/TEC', t, c5, c6, 1)
+% drawPrice(macPath, '/TEC_wo_ACLs', t, c5, c6, 2)
+% drawPrice(macPath, '/TEC_wo_SOM', t, c5, c6, 3)
+% xlabel('t(day)')
 
-isOneday = 4;
 drawPower([macPath,'/TEC'], 'Case I - TEC with ACLs', t, c1, c2, c3, c4, '-', 1, isOneday)
 drawPower([macPath, '/TEC_wo_ACLs'], 'Case II - TEC w/o ACLs', t, c1, c2, c3, c4, '-', 2, isOneday)
 drawPower([macPath, '/TEC_wo_SOM'], 'Case III - TEC w/o smart overloading management', t, c1, c2, c3, c4, '-', 3, isOneday)
@@ -41,7 +43,7 @@ if isEn == 1
 else
     xlabel('时间')
 end
-t3 = 0: T: 7 * 24;
+t3 = 0: T: DAY * 24;
 if isEn == 1
     titleTemperature = 'temperature(^oC)';
     titleAging = 'relative aing rate';

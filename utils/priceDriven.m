@@ -6,7 +6,7 @@ tielineRecord = zeros(1,I);%自联络线购电量
 gridPriceRecord4 = zeros(1,I);
 
 EVpowerRecord = zeros(EV, I);
-EVdata_E = zeros(maxEV, I);
+EVdata_E = zeros(EV, I);
 EVdata_E(:, 1) = EVdata_initE .* EVdata_capacity';
 
 IVApowerRecord = zeros(IVA, I);
@@ -17,10 +17,6 @@ TCLpowerRecord = zeros(FFA, I2);
 TCLdata_Ta = zeros(FFA, I);
 TCLdata_Ta(:, 1) =  TCLdata_initT(1 : FFA, 1);
 TCL_totalpowerRecord = zeros(1, I);
-for t_index = 1: I
-    gridPrice = gridPriceRecord(floor((t_index - 1) * T) + 1);
-    gridPriceRecord4(t_index) = gridPrice;
-end
 
 for day = 1 : DAY
     for i = 1 : I_day
@@ -83,7 +79,8 @@ for day = 1 : DAY
         if mod(t_index, I_tcl) == 1
             t_index_tcl = floor(t_index / I_tcl) + 1;
             N = T_mpc / T_tcl;
-            TCLmpcPriceRecord = getTout(gridPriceRecord, floor(t_index / (T_tcl / T)) + 1, N);
+            gridPricePerH = mean(reshape(gridPriceOneDay, 4, 24));
+            TCLmpcPriceRecord = getTout(repmat(gridPricePerH, 1, DAY), floor(t_index / (T_tcl / T)) + 1, N);
             ToutRecord = zeros(N, 1);
             for n = 1 : N
                 ToutRecord(n) = mean(getTout(Tout,t_index + (n - 1) * (T_tcl / T), T_tcl / T));

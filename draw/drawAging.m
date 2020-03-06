@@ -1,22 +1,24 @@
 function [] = draw_aging(macPath, variable, t, yLabelName, titleName, index, c1, c2, c3, c4, isOneday )
-global isEn
+global isEn howManyDays
 figure;
 hold on
 
-v = load_v([macPath, '/TEC_wo_ACLs.mat'], variable); 
 if isOneday > 0
     st = isOneday * 96 + 1;
-    en = st + 96;
+    en = st + 96 * howManyDays - 1;
 else
     st = 1;
     en = length(t);
 end
-
+v = load_v([macPath, '/TEC_wo_ACLs.mat'], variable); 
 h2 =  plot(t(st: en), v(st: en), 'Color', c2, 'LineStyle', '-', 'LineWidth', 1.5, 'Marker', 'd', 'MarkerSize', 3, ...
     'DisplayName', 'Case II - TEC w/o ACLs'); 
 
 v = load_v([macPath, '/TEC_wo_SOM.mat'], variable); 
 h3 =  plot(t, v,'Color', c3, 'LineStyle', '--', 'LineWidth', 1.5,'DisplayName', 'Case III - TEC w/o smart overloading management'); 
+
+v = load_v([macPath, '/TEC_wo_SOM_wo_heb.mat'], variable); 
+h31 =  plot(t, v,'Color', c3, 'LineStyle', '--', 'LineWidth', 1.5,'DisplayName', 'Case III - TEC w/o smart overloading management', 'marker', 'd', 'MarkerSize', 3); 
 
 v = load_v([macPath, '/non_coordinated.mat'], variable); 
 h4 =  plot(t(st: en), v(st: en), 'Color', c2, 'LineStyle', ':', 'LineWidth', 1.5, 'DisplayName', 'Case IV - non-coordinated'); 
@@ -39,7 +41,6 @@ if (index == 1)
         le = legend([h1, h2, h3, h4, h5],'Case I   - TEC with ACLs',...
                                     'Case II  - TEC w/o ACLs', ...
                                     'Case III - TEC w/o smart overloading management',...
-                                    'Case IV  - non-coordinated',...
                                     'Case V   - uncontrolled',...
                                     'Orientation', 'vertical');
     else
@@ -56,15 +57,7 @@ for d = 1: 6
 drawVerticalLine(24 * d, 0, maxY, 'black', ':')
 end
 ylim([minY, maxY]);
-if isOneday == 0
-    xlim([0, 24 * 7]);
-    xticks(0 : 12 : 24 * 7);
-    xticklabels({ '0', '12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5', '12:00', '6', '12:00', '7'});
-else
-    xlim([(st-1)/4, en/4]);
-     xticks((st-1)/4 : 6 : en/4);
-    xticklabels({'0:00', '6:00', '12:00', '18:00', '24:00'});
-end
+drawTimeAxis;
 if isEn == 1
     xlabel('t(day)');
     set(gcf,'unit','normalized','position',[0,0,0.3,0.15]);

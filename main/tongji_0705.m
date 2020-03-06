@@ -5,9 +5,9 @@ clc;clear;
 close all;
 addPath;
 load('../../data/COLOR');
-macPath = '../../data/1227-2';
+macPath = '../../data/20200305';
 load([macPath, '/TEC']);
-global totalCostRecord relativeAgingRecord lfRecord isEn
+global totalCostRecord relativeAgingRecord lfRecord isEn howManyDays
 totalCostRecord = zeros(1, 5);
 relativeAgingRecord = zeros(1, 5);
 lfRecord = zeros(1, 5);
@@ -20,53 +20,19 @@ t0 = 1 : DAY * 24;
 t3 = 0: T: DAY * 24;
 c1 = black; c2 = green; c3 = darkblue; c4 = tomato;
 
+isOneday = 3;
+howManyDays = 2;
+
 %基本仿真数据
-figure;
-hold on;
-yyaxis left
-Hbar1 = bar(t0, 100 * gridPriceRecord/ mkt_max); 
-Hbar1(1).FaceColor = [0.8, 0.8, 0.8];
-Hbar1(1).EdgeColor = Hbar1(1).FaceColor;
-Ht1 = plot(t, 100 * loadPowerRecord / LOAD);
-set(Ht1, 'color', [0, 173, 52 ]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-H1 = plot(t, 100 * windPowerRecord / LOAD);
-set(H1, 'color', [0, 93, 186]/255, 'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-if isEn == 1
-    ylabel('p.u.(%)')
-else
-    ylabel('标幺值(%)')
-end
-yyaxis right
-H3 = plot(t, repmat(Tout, 1, DAY));
-set(H3, 'color', tomato,'LineWidth', 1.5, 'LineStyle', '-', 'marker', 'none');
-if isEn == 1
-    ylabel('temperature(^oC)')
-    le = legend([Ht1, H1, Hbar1, H3], 'base load', 'RES', 'utility price', 'temperature', 'Orientation', 'horizontal'); 
-else
-    ylabel('温度(摄氏度)')
-    le = legend([Ht1, H1, Hbar1, H3], '基本负荷', '可再生能源', '主网电价', '温度', 'Orientation', 'horizontal'); 
-end
-set(le, 'Box', 'off')
-
-xlim([0, 24 * DAY]);
-xticks(0 : 12 : 24 * DAY);
-xticklabels({ '0', '12:00', '1', '12:00', '2', '12:00', '3', '12:00', '4', '12:00', '5', '12:00', '6', '12:00', '7'});
-
-if isEn == 1
-    xlabel('t(day)');
-    set(gcf,'unit','normalized','position',[0,0,0.3,0.15]);
-else
-    xlabel('时间')
-    set(gcf,'Position',[0 0 650 250]);
-end
+drawInfo;
 
 % ----------------------------------------------------------------------
 c5 = darkblue; c6 = tomato;
-drawPrice(macPath, '/TEC', t, c5, c6, 1)
-drawPrice(macPath, '/TEC_wo_ACLs', t, c5, c6, 2)
-drawPrice(macPath, '/TEC_wo_SOM', t, c5, c6, 3)
-xlabel('t(day)')
-isOneday = 4;
+% drawPrice(macPath, '/TEC', t, c5, c6, 1)
+% drawPrice(macPath, '/TEC_wo_ACLs', t, c5, c6, 2)
+% drawPrice(macPath, '/TEC_wo_SOM', t, c5, c6, 3)
+% xlabel('t(day)')
+
 drawPower([macPath,'/TEC'], 'Case I - TEC with ACLs', t, c1, c2, c3, c4, '-', 1, isOneday)
 drawPower([macPath, '/TEC_wo_ACLs'], 'Case II - TEC w/o ACLs', t, c1, c2, c3, c4, '-', 2, isOneday)
 drawPower([macPath, '/TEC_wo_SOM'], 'Case III - TEC w/o smart overloading management', t, c1, c2, c3, c4, '-', 3, isOneday)
@@ -77,7 +43,7 @@ if isEn == 1
 else
     xlabel('时间')
 end
-t3 = 0: T: 7 * 24;
+t3 = 0: T: DAY * 24;
 if isEn == 1
     titleTemperature = 'temperature(^oC)';
     titleAging = 'relative aing rate';

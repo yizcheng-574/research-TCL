@@ -1,4 +1,5 @@
 %计算老化成本
+gridPriceRecord4 = repmat(gridPriceOneDay, 1, DAY);
 if isAging == 0 
     for day = 1 : DAY
         for i = 1 : I_day

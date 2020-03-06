@@ -10,7 +10,7 @@ k11 = 1;
 k21 = 1;
 k22 = 2;
 if isBid == 1
-    K = [0: 0.005 : 0.7 0.71 : 0.01 :1.15]; %load factor
+    K = [0.5:0.1:0.9, 0.91 : 0.01 :1.2]; %load factor 1.2倍为最大限制功率
 else
     if isMultiDay == 0
         tmp_t_index = mod_t_1;
@@ -32,13 +32,17 @@ d_theta_h = d_theta_h1 - d_theta_h2;
 theta_h = theta_o + d_theta_h;
 maxIndex = find(theta_h > MAX_TEMP, 1);
 if maxIndex > 1
-    maxK = K(maxIndex -1);
-    K(K>maxK) = maxK;
-    theta_h(theta_h > MAX_TEMP) = MAX_TEMP;
+    K = K(1: maxIndex);
+    theta_h = theta_h(1: maxIndex);
+    KR = KR(1: maxIndex);
+    theta_o = theta_o(1: maxIndex);
+    d_theta_h1 = d_theta_h1(1: maxIndex);
+    d_theta_h2 = d_theta_h2(1: maxIndex);
+    d_theta_h = d_theta_h(1: maxIndex);
 else
     maxIndex = length(K);
 end
-DL = exp((15000 / (100 + 273) - 15000 ./ (theta_h + 273))); % 110 for thermally updated paper
+DL = exp((15000 / (110 + 273) - 15000 ./ (theta_h + 273))); % 110 for thermally updated paper
 if isBid == 1
     P_rated = tielineBuy;%kW
     dC_dL = install_cost / expectancy;
@@ -49,31 +53,31 @@ if isBid == 1
        (1 - exp(- Tmin / (eta_o * k11))) * d_theta_or * x .* KR .^ (x - 1) * 2 .* K * R / (1 + R); %theta_o
     dK_dP = 1 / P_rated;
     dC_dP = 60 * dC_dL .* dL_dtheta_h .* dtheta_h_dK .* dK_dP;
-    
     tielineCurve = zeros(1, step + 1);
-    k_index = 1;
     for q = 1: step + 1
+        t_index_tmp = maxIndex;
         price_tmp = pCurve(q) - gridPrice;
         if price_tmp < 0
-            tielineCurve(q) = -tielineSold;
+            tielineCurve(q) = - tielineSold;
         elseif price_tmp == 0
-            tielineCurve(q) = tielineBuy;
+            tielineCurve(q) = 0;
+            maxPower = tielineBuy;
         else
-            for tmp_i = k_index : maxIndex - 1
-                if dC_dP(tmp_i) <= price_tmp && dC_dP(tmp_i + 1) >= price_tmp
-                    k_index = tmp_i;
-                    break; 
+            while dC_dP(t_index_tmp) > price_tmp
+                t_index_tmp = t_index_tmp - 1;
+                if t_index_tmp == 1
+                    break;
                 end
             end
-            if tmp_i == length(K)
+            if t_index_tmp == maxIndex
                 tielineCurve(q) = K(end) * P_rated;
             else
-                dP = K(tmp_i + 1) - K(tmp_i);
-                dlambda = dC_dP(tmp_i + 1) - dC_dP(tmp_i);
+                dP = K(t_index_tmp + 1) - K(t_index_tmp);
+                dlambda = dC_dP(t_index_tmp + 1) - dC_dP(t_index_tmp);
                 if dlambda == 0
-                    tielineCurve(q) = (K(tmp_i + 1) + K(tmp_i))/2 * P_rated;
+                    tielineCurve(q) = (K(t_index_tmp + 1) + K(t_index_tmp))/2 * P_rated;
                 else
-                    tielineCurve(q) = P_rated * (K(tmp_i) + (price_tmp - dC_dP(tmp_i)) * dP / dlambda);
+                    tielineCurve(q) = P_rated * (K(t_index_tmp) + (price_tmp - dC_dP(t_index_tmp)) * dP / dlambda);
                 end
             end
         end

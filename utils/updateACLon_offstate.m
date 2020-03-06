@@ -13,7 +13,7 @@ else
     isFFAon = ones(FFA, 1);
 end
 if willIVAclose
-    isIVAon = isTCLon(FFA + 1:end, :);
+    isIVAon = isTCLon(FFA + 1:FFA + IVA, :);
 else
     isIVAon = ones(IVA, 1);
 end

@@ -1,4 +1,4 @@
-step = 500;%投标精度
+step = 100;%投标精度
 mkt_min = 0.25;
 mkt_max = 1.25;
 mkt = [mkt_min,mkt_max,step];
@@ -28,5 +28,8 @@ else
     windPowerRecord = mean(Wind(w_s:w_e, :));
     windPowerRecord = windPowerRecord/  max(max(windPowerRecord)) * WIND;
 end
+
+loadPowerRecord = repmat(loadPowerRecord, 1, WEEK);
+windPowerRecord = repmat(windPowerRecord, 1, WEEK);
 
 clear Load Wind loadPower windPower

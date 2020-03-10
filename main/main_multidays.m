@@ -78,7 +78,7 @@ for day = 1 : DAY
         
         bidCurve = zeros(1, step + 1);
         % 联络线投标
-        if isAging == 1 % 考虑变压器损耗
+        if isAging == 1 || (isAging == 2 && gridPrice == priceValley)% 考虑变压器损耗 或 分时段采用不同策略
             isBid = 1;
             transformer_ageing_expo;
         else % 不考虑变压器损耗
@@ -334,9 +334,8 @@ for day = 1 : DAY
             prePriceRecord(t_index) = preResult;
         end
 
-        if isAging == 1
-            isBid = 0;
-            transformer_ageing_expo;
+        if isAging == 1 || isAging == 2
+            isBid = 0; transformer_ageing_expo;
         end
     end
 end

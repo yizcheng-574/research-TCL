@@ -26,7 +26,7 @@ for day = 1 : DAY
         time_all = (t_index - 1) * T;%总时长
         theta_a = Tout(i);%C %Tout
         gridPrice = gridPriceRecord4(t_index);
-        sigma = sigmaRecord(floor(time) + 1);
+        sigma = sigmaRecordOneDay(floor(time) + 1);
         
         %EV仅在到达时刻优化
         for ev = 1 : EV

@@ -1,11 +1,11 @@
 addPath;warning('off');
 startmatlabpool();
 clc; clear;
-path = '../../data/20200308';
+path = '../../data/20200325';
 dataPath = [path, '/data.mat'];
 WEEK = 1;
 DAY = WEEK * 7;
-RATIO = 10; 
+RATIO = 100; 
 EV = 5 * RATIO; % EV总数，额定功率为3.7kW
 FFA = 6 * RATIO; % 空调总数
 IVA = 4 * RATIO;
@@ -18,7 +18,7 @@ I = 24 * DAY / T;
 I_day = 24 / T;
 I_tcl = T_tcl / T;
 I2 = 24 * DAY / T_tcl;
-LOAD = 22 * RATIO; % LOAD最大负荷（kW）
+LOAD = 20 * RATIO; % LOAD最大负荷（kW）
 WIND = 6 * RATIO; % WIND风电装机容量（kW）
 tielineSold = 10 * RATIO;
 tielineBuy = 31.5 * RATIO;
@@ -26,6 +26,8 @@ eta = 0.9;
 ratioFFA = 0.7;
 ratioIVA = 2;
 tolerance = 0.01;
+
+weightRatio = 1; % 变压器老化权重系数
 if exist('DAY', 'var') == 1
     isMultiDay = 1;
 else
@@ -45,7 +47,7 @@ modeType = [
     0, 0, 0, 0; % Case V - uncontrolled
 ];
     % TC方案，对EV、TCL进行优化结果比较
-for mode = 1:4
+for mode = [1, 3]
     clearvars -except modeType mode dataPath penetration
     load(dataPath);
     isAging = modeType(mode, 1);
@@ -63,8 +65,8 @@ for mode = 1:4
         save([path, '/uncontrolled']);
     end
 end
-clearvars -except dataPath modeType mode penetration RATIO 
-load(dataPath);
-priceDriven; % Case IV - non-coordinated
-save([path, '/non_coordinated']);
+% clearvars -except dataPath modeType mode penetration RATIO 
+% load(dataPath);
+% priceDriven; % Case IV - non-coordinated
+% save([path, '/non_coordinated']);
 closematlabpool();

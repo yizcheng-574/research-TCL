@@ -3,7 +3,6 @@ TransformerInit;
 isUserAtHome = zeros(EV, 1);
 
 tielineRecord = zeros(1,I);%自联络线购电量
-gridPriceRecord4 = zeros(1,I);
 
 EVpowerRecord = zeros(EV, I);
 EVdata_E = zeros(EV, I);
@@ -25,14 +24,13 @@ for day = 1 : DAY
         time = (i - 1) * T ;%当前时长（24小时制）
         time_all = (t_index - 1) * T;%总时长
         theta_a = Tout(i);%C %Tout
-        gridPrice = gridPriceRecord4(t_index);
         sigma = sigmaRecordOneDay(floor(time) + 1);
         
         %EV仅在到达时刻优化
         for ev = 1 : EV
             if time >= EVdata(1, ev) && time - T < EVdata(1, ev) %刚抵达
-                prePrice = getTout(gridPriceRecord4, t_index, day * I_day + floor(EVdata(2,ev) / T) - t_index + 1);
-                Pavg = EVopt(T, EVdata_E(ev, t_index), EVdata_alpha(ev),...
+                prePrice = getTout(repmat(gridPriceOneDay, 1, DAY), t_index, day * I_day + floor(EVdata(2,ev) / T) - t_index);
+                Pavg = EVopt(T, EVdata_E(ev, t_index), 0,...
                     EVdata_mile(ev), EVdata_capacity(ev), PN, prePrice);
                 EVpowerRecord(ev, t_index : t_index + length(prePrice) -1 ) = Pavg;
             end
@@ -53,7 +51,7 @@ for day = 1 : DAY
         
         %IVA
         N = T_mpc / T;
-        IVAmpcPriceRecord = getTout(gridPriceRecord4, t_index, N);
+        IVAmpcPriceRecord = getTout(repmat(gridPriceOneDay, 1, DAY), t_index, N);
         ToutRecord = getTout(Tout, t_index , N);
         tmp_T = IVAdata_Ta(:, t_index);
         tmp_P = zeros(IVA, 1);

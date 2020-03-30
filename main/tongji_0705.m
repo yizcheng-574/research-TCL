@@ -5,10 +5,10 @@ clc;clear;
 close all;
 addPath;
 load('../../data/COLOR');
-macPath = '../../data/20200305';
+macPath = '../../data/20200311';
 load([macPath, '/TEC']);
 global totalCostRecord relativeAgingRecord lfRecord isEn howManyDays
-totalCostRecord = zeros(1, 5);
+totalCostRecord = zeros(5, 3);
 relativeAgingRecord = zeros(1, 5);
 lfRecord = zeros(1, 5);
 isEn = 0;
@@ -20,12 +20,11 @@ t0 = 1 : DAY * 24;
 t3 = 0: T: DAY * 24;
 c1 = black; c2 = green; c3 = darkblue; c4 = tomato;
 
-isOneday = 3;
-howManyDays = 2;
 
+isOneday = 0;
 %基本仿真数据
 drawInfo;
-
+% 
 % ----------------------------------------------------------------------
 c5 = darkblue; c6 = tomato;
 % drawPrice(macPath, '/TEC', t, c5, c6, 1)
@@ -33,6 +32,8 @@ c5 = darkblue; c6 = tomato;
 % drawPrice(macPath, '/TEC_wo_SOM', t, c5, c6, 3)
 % xlabel('t(day)')
 
+isOneday = 3;
+howManyDays = 2;
 drawPower([macPath,'/TEC'], 'Case I - TEC with ACLs', t, c1, c2, c3, c4, '-', 1, isOneday)
 drawPower([macPath, '/TEC_wo_ACLs'], 'Case II - TEC w/o ACLs', t, c1, c2, c3, c4, '-', 2, isOneday)
 drawPower([macPath, '/TEC_wo_SOM'], 'Case III - TEC w/o smart overloading management', t, c1, c2, c3, c4, '-', 3, isOneday)

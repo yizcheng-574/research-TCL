@@ -18,5 +18,5 @@ d_theta_h2_record(tmp)= d_theta_h2;
 theta_o_record(tmp) = theta_o;
 expectancy = 20 * 365 * 24 * 60; % min
 P_rated = tielineBuy;%kW
-install_cost = 5000 * RATIO; %yuan
+install_cost = 5000 * RATIO * weightRatio; %yuan
 dC_dL = install_cost / expectancy;

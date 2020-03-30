@@ -17,9 +17,6 @@ h2 =  plot(t(st: en), v(st: en), 'Color', c2, 'LineStyle', '-', 'LineWidth', 1.5
 v = load_v([macPath, '/TEC_wo_SOM.mat'], variable); 
 h3 =  plot(t, v,'Color', c3, 'LineStyle', '--', 'LineWidth', 1.5,'DisplayName', 'Case III - TEC w/o smart overloading management'); 
 
-v = load_v([macPath, '/TEC_wo_SOM_wo_heb.mat'], variable); 
-h31 =  plot(t, v,'Color', c3, 'LineStyle', '--', 'LineWidth', 1.5,'DisplayName', 'Case III - TEC w/o smart overloading management', 'marker', 'd', 'MarkerSize', 3); 
-
 v = load_v([macPath, '/non_coordinated.mat'], variable); 
 h4 =  plot(t(st: en), v(st: en), 'Color', c2, 'LineStyle', ':', 'LineWidth', 1.5, 'DisplayName', 'Case IV - non-coordinated'); 
 minY = min(v(st: en)) / 1.05;

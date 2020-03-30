@@ -1,7 +1,7 @@
 close all;
 isEn = 0;
-% load('../../data/0423/hiearchical.mat')
-load('../../data/COLOR');
+% load('../data/0423/hiearchical.mat')
+load('../data/COLOR');
 
 % transAdmm1.calculateCost();
 % transAdmm2.calculateCost();
@@ -19,7 +19,7 @@ ccp.calculateCost();
 
 t = T : T :24;
 t2 = 0 : T_tcl : 24;
-load('../../data/COLOR');
+load('../data/COLOR');
 
 % ¹¦ÂÊ
 figure; hold on;

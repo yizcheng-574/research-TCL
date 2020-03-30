@@ -13,7 +13,7 @@ q1 = 0.06;
 p2 = -0.4;
 q2 = -0.3;
 sen_index = 1;
-load('../../data/Tout.mat');
+load('../data/Tout.mat');
 ToutRecord = zeros(1, I_day);
 if isMultiDay == 1
     for i = 1 : 24 / T

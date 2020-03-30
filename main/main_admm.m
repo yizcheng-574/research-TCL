@@ -76,7 +76,7 @@ if isHierarchical == 1
         end
         ccp.update(trans1.getPower(t_index) + trans2.getPower(t_index) + trans3.getPower(t_index), t_index);
     end
-    save '../../data/0423/hiearchical'
+    save '../data/0423/hiearchical'
 end
 toc;
 %----------ADMM--------------------------------------

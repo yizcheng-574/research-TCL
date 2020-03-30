@@ -2,7 +2,7 @@ close all;
 global T t tomato royalblue c1 c3
 T = 0.25;
 t = T:T:24;
-load('../../data/COLOR');
+load('../data/COLOR');
 c1 = black; c2 = green; c3 = darkblue; c4 = tomato;
 isEn = 0;
 %比较老化

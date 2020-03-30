@@ -4,8 +4,8 @@ set(0,'defaultAxesFontName','Microsoft Yahei UI');
 clc;clear;
 close all;
 addPath;
-load('../../data/COLOR');
-macPath = '../../data/20200311';
+load('../data/COLOR');
+macPath = '../data/Jinhu-base';
 load([macPath, '/TEC']);
 global totalCostRecord relativeAgingRecord lfRecord isEn howManyDays
 totalCostRecord = zeros(5, 3);

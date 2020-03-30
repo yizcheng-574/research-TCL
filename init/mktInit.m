@@ -3,8 +3,8 @@ mkt_min = 0.25;
 mkt_max = 1.25;
 mkt = [mkt_min,mkt_max,step];
 pCurve = (mkt_min:(mkt_max-mkt_min)/step:mkt_max);
-load('../../data/load_2017');
-load('../../data/wind_2017');
+load('../data/load_2017');
+load('../data/wind_2017');
 w_s = 14; w_e = 26;
 if isMultiDay == 0 %µ¥Ìì
     Load = Load(w_s: w_e, :);

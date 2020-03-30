@@ -1,7 +1,7 @@
 addPath;warning('off');
 startmatlabpool();
 clc; clear;
-path = '../../data/20200325';
+path = '../data/demo';
 dataPath = [path, '/data.mat'];
 WEEK = 1;
 DAY = WEEK * 7;

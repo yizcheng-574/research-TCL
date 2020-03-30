@@ -61,7 +61,7 @@ if isHeb == 1
         congeQujian(i) = (congeList(i) + congeList(i + 1)) / 2;
     end
 %     W = -1 * ones(m, I_day);
-    load('../../data/heb_weight.mat');
+    load('../data/heb_weight.mat');
     prePriceRecord = zeros(1, I);
 end
 preConge = gridPriceOneDay;

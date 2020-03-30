@@ -1,8 +1,8 @@
 clc; clear;
 close all;
 addPath;
-load('../../data/COLOR');
-macPath = '../../data/penetration/';
+load('../data/COLOR');
+macPath = '../data/penetration/';
 %%%% variable format
 %                  case1 case2 case3 case4
 % -----------------------------------------

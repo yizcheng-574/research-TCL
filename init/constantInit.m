@@ -1,9 +1,9 @@
 global T T_tcl T_mpc I I_day I_tcl I2
 
-load('../../data/load_2017');
-load('../../data/wind_2017');
-load('../../data/Tout.mat');
-load('../../data/RTP_pjm');
+load('../data/load_2017');
+load('../data/wind_2017');
+load('../data/Tout.mat');
+load('../data/RTP_pjm');
 %---------------------------
 T = 15 / 60;%控制周期15min
 T_tcl = 1; %空调控制指令周期60min

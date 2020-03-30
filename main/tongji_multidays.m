@@ -3,8 +3,8 @@
 clc;clear;
 close all;
 addPath;
-load('../../data/COLOR');
-macPath = '../../data/0706-1';
+load('../data/COLOR');
+macPath = '../data/0706-1';
 load([macPath, '/mode']);
 
 global totalCostRecord relativeAgingRecord lfRecord
